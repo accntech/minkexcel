@@ -108,6 +108,7 @@ export async function inflate(
 	signal?: AbortSignal
 ): Promise<Uint8Array> {
 	signal?.throwIfAborted();
+	if (signal) await checkpoint(signal);
 	const output = new Uint8Array(maximum),
 		bits = new Bits(input);
 	let size = 0,

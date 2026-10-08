@@ -198,6 +198,12 @@ describe('Workbook import', () => {
 			readWorkbook(await modified('xl/workbook.xml'))
 		).rejects.toThrow('Missing');
 	});
+	test('rejects a shared-string part with the wrong root element', async () => {
+		const parts = unzip(await fixture());
+		parts.set('xl/sharedStrings.xml', parts.get('xl/sharedStrings.xml')!
+			.replace('<sst ', '<other ').replace('</sst>', '</other>'));
+		await expect(readWorkbook(await writeZip(parts))).rejects.toThrow('shared-string');
+	});
 	test('enforces archive byte, entry count, compression and decompressed limits', async () => {
 		const bytes = await fixture();
 		for (const limits of [
@@ -208,6 +214,20 @@ describe('Workbook import', () => {
 			{ compressionRatio: 1 }
 		])
 			await expect(readWorkbook(bytes, limits)).rejects.toThrow();
+	});
+	test('rejects invalid caller limits instead of silently disabling bounds', async () => {
+		const bytes = await fixture();
+		for (const key of ['fileBytes', 'entries', 'entryBytes', 'totalBytes', 'rows', 'columns', 'cells'] as const) {
+			for (const value of [NaN, Infinity, -1, 1.5])
+				await expect(readWorkbook(bytes, { [key]: value })).rejects.toThrow('limit');
+		}
+		for (const value of [NaN, Infinity, -1, 0])
+			await expect(readWorkbook(bytes, { compressionRatio: value })).rejects.toThrow('limit');
+	});
+	test('undefined optional limits retain defaults and custom byte errors report the actual bound', async () => {
+		const bytes = await fixture();
+		expect((await readWorkbook(bytes, { rows: undefined })).worksheets[0].rowCount).toBe(3);
+		await expect(readWorkbook(bytes, { fileBytes: 100 })).rejects.toThrow('100 bytes');
 	});
 	test('rejects external worksheets and invalid shared string indices', async () => {
 		await expect(
@@ -246,6 +266,16 @@ describe('Workbook import', () => {
 			(await readWorkbook(await writeZip(parts))).worksheets[0].getCell('C3')
 				.value
 		).toBe('  Ana & Co  ');
+	});
+	test('rejects duplicate worksheet data sections in both import paths', async () => {
+		const bytes = await modified('xl/worksheets/sheet1.xml', '<worksheet><sheetData/><sheetData/></worksheet>');
+		for (const signal of [undefined, new AbortController().signal])
+			await expect(readWorkbook(bytes, {}, signal)).rejects.toThrow('worksheet data');
+	});
+	test('ignores rows outside the direct worksheet data section in both import paths', async () => {
+		const bytes = await modified('xl/worksheets/sheet1.xml', '<worksheet><ignored><sheetData><row r="1"><c r="A1"><v>999</v></c></row></sheetData></ignored><sheetData><row r="1"><c r="A1"><v>123</v></c></row></sheetData></worksheet>');
+		for (const signal of [undefined, new AbortController().signal])
+			expect((await readWorkbook(bytes, {}, signal)).worksheets[0].getCell('A1').value).toBe(123);
 	});
 	for (const [address, reason, row] of [
 		['A10002', '10000-row', 10002],

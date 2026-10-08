@@ -4,14 +4,10 @@ export const spreadsheetNamespace = 'http://schemas.openxmlformats.org/spreadshe
 export const relationshipNamespace =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 export const declaration = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const xmlEscapes: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
 
 export function xml(value: string | number | boolean): string {
-	return String(value)
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&apos;');
+	return String(value).replace(/[&<>"']/g, (character) => xmlEscapes[character]);
 }
 export function excelText(value: string): string {
 	return xml(
@@ -19,7 +15,7 @@ export function excelText(value: string): string {
 			.replace(/_x[\da-f]{4}_/gi, (match) => '_x005F_' + match.slice(1))
 			.replace(
 				/[\u0000-\u0008\u000B\u000C\u000D\u000E-\u001F\uFFFE\uFFFF]/g,
-				(character) => `_x${character.charCodeAt(0).toString(16).padStart(4, '0')}_`
+				(character) => `_x${character.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}_`
 			)
 	);
 }
@@ -31,12 +27,14 @@ export function decodeExcelText(value: string): string {
 	);
 }
 export function attributes(values: Record<string, string | number | boolean | undefined>): string {
-	return Object.entries(values)
-		.filter(([, value]) => value !== undefined)
-		.map(
-			([name, value]) => ` ${name}="${xml(typeof value === 'boolean' ? Number(value) : value!)}"`
-		)
-		.join('');
+	let result = '';
+	for (const name in values) {
+		if (!Object.hasOwn(values, name)) continue;
+		const value = values[name];
+		if (value !== undefined)
+			result += ` ${name}="${xml(typeof value === 'boolean' ? Number(value) : value)}"`;
+	}
+	return result;
 }
 
 export type XmlNode = {
@@ -45,26 +43,23 @@ export type XmlNode = {
 	text: string;
 	children: XmlNode[];
 };
+export type XmlVisitor = (node: XmlNode, parent: XmlNode | undefined, depth: number) => boolean;
 function invalidXml(): never {
 	throw new XlsxError('Invalid workbook XML.');
 }
 function validCharacters(value: string): boolean {
-	for (const character of value) {
-		const code = character.codePointAt(0)!;
-		if (
-			(code < 32 && code !== 9 && code !== 10 && code !== 13) ||
-			(code >= 0xd800 && code <= 0xdfff) ||
-			code === 0xfffe ||
-			code === 0xffff
-		)
-			return false;
-	}
-	return true;
+	// Unicode mode rejects lone surrogates while permitting valid astral pairs.
+	return !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE\uFFFF]/u.test(value);
+}
+const namedEntities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+function checkPrefix(key: string, namespaces: Record<string, string>): void {
+	const colon = key.indexOf(':');
+	if (colon >= 0 && !namespaces[key.slice(0, colon)]) invalidXml();
 }
 function entities(value: string): string {
+	if (!value.includes('&')) return value;
 	return value.replace(/&([^&;<]*);|&/g, (match, entity: string | undefined) => {
-		const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
-		if (entity && Object.hasOwn(named, entity)) return named[entity];
+		if (entity && Object.hasOwn(namedEntities, entity)) return namedEntities[entity];
 		if (!entity || !/^#(?:[0-9]+|x[0-9a-f]+)$/i.test(entity)) return invalidXml();
 		const code =
 			entity[1].toLowerCase() === 'x' ? parseInt(entity.slice(2), 16) : Number(entity.slice(1));
@@ -73,23 +68,45 @@ function entities(value: string): string {
 	});
 }
 /** Focused XML 1.0 tokenizer. Never resolves DTDs or external entities. */
-export function parseXml(input: string): XmlNode {
+export function parseXml(input: string, onClose?: XmlVisitor): XmlNode {
 	if (!validCharacters(input)) invalidXml();
 	const source = input.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 	const stack: Array<{ node: XmlNode; qualified: string; namespaces: Record<string, string> }> = [];
+	const rootNamespaces: Record<string, string> = Object.assign(Object.create(null), {
+		xml: 'http://www.w3.org/XML/1998/namespace'
+	});
 	let root: XmlNode | undefined,
 		offset = 0;
-	const namePattern = /[A-Za-z_][A-Za-z0-9_.-]*(?::[A-Za-z_][A-Za-z0-9_.-]*)?/y;
+	const complete = (node: XmlNode) => {
+		if (!onClose) return;
+		const parent = stack.at(-1)?.node;
+		if (onClose(node, parent, stack.length) && parent) parent.children.pop();
+	};
 	const name = () => {
-		namePattern.lastIndex = offset;
-		const match = namePattern.exec(source);
-		if (!match) return invalidXml();
-		offset = namePattern.lastIndex;
-		return match[0];
+		const start = offset;
+		for (let part = 0; part < 2; part++) {
+			let code = source.charCodeAt(offset);
+			if (!(code === 95 || code >= 65 && code <= 90 || code >= 97 && code <= 122)) invalidXml();
+			offset++;
+			while (offset < source.length) {
+				code = source.charCodeAt(offset);
+				if (!(code === 95 || code === 45 || code === 46 || code >= 48 && code <= 57 ||
+					code >= 65 && code <= 90 || code >= 97 && code <= 122)) break;
+				offset++;
+			}
+			if (source.charCodeAt(offset) !== 58) break;
+			if (part === 1) invalidXml();
+			offset++;
+		}
+		return source.slice(start, offset);
 	};
 	const whitespace = () => {
 		const start = offset;
-		while (/[\t\n\r ]/.test(source[offset] ?? '') && offset < source.length) offset++;
+		while (offset < source.length) {
+			const code = source.charCodeAt(offset);
+			if (code !== 32 && code !== 9 && code !== 10 && code !== 13) break;
+			offset++;
+		}
 		return offset > start;
 	};
 	while (offset < source.length) {
@@ -147,17 +164,22 @@ export function parseXml(input: string): XmlNode {
 			whitespace();
 			if (source[offset++] !== '>' || !stack.length || stack.at(-1)!.qualified !== qualified)
 				invalidXml();
-			stack.pop();
+			complete(stack.pop()!.node);
 			continue;
 		}
 		const qualified = name(),
 			attrs: Record<string, string> = Object.create(null);
+		let namespaceAttributes: string[] | undefined;
+		let prefixedAttributes: string[] | undefined;
 		for (;;) {
 			const separated = whitespace();
 			if (source[offset] === '>' || source.startsWith('/>', offset)) break;
 			if (!separated) invalidXml();
 			const attribute = name();
 			if (Object.hasOwn(attrs, attribute)) invalidXml();
+			if (attribute === 'xmlns' || attribute.startsWith('xmlns:'))
+				(namespaceAttributes ??= []).push(attribute);
+			else if (attribute.includes(':')) (prefixedAttributes ??= []).push(attribute);
 			whitespace();
 			if (source[offset++] !== '=') invalidXml();
 			whitespace();
@@ -170,19 +192,35 @@ export function parseXml(input: string): XmlNode {
 			attrs[attribute] = entities(value.replace(/[\t\n]/g, ' '));
 			offset = end + 1;
 		}
-		const namespaces = {
-			...(stack.at(-1)?.namespaces ?? { xml: 'http://www.w3.org/XML/1998/namespace' })
-		};
-		for (const [key, value] of Object.entries(attrs))
-			if (key.startsWith('xmlns:')) namespaces[key.slice(6)] = value;
-		const checkPrefix = (key: string) => {
-			if (key.includes(':') && !key.startsWith('xmlns:') && !namespaces[key.split(':')[0]])
-				invalidXml();
-		};
-		checkPrefix(qualified);
-		for (const key of Object.keys(attrs)) checkPrefix(key);
+		let namespaces = stack.at(-1)?.namespaces ?? rootNamespaces;
+		let declaredNamespaces = false;
+		for (const key of namespaceAttributes ?? []) {
+			if (key === 'xmlns' && (attrs[key] === 'http://www.w3.org/XML/1998/namespace' || attrs[key] === 'http://www.w3.org/2000/xmlns/')) invalidXml();
+			if (key.startsWith('xmlns:')) {
+				const value = attrs[key];
+				if (key === 'xmlns:xml' && value !== 'http://www.w3.org/XML/1998/namespace') invalidXml();
+				if (!value || key === 'xmlns:xmlns' || value === 'http://www.w3.org/2000/xmlns/' ||
+					(key !== 'xmlns:xml' && value === 'http://www.w3.org/XML/1998/namespace')) invalidXml();
+				if (!declaredNamespaces) {
+					namespaces = Object.assign(Object.create(null), namespaces);
+					declaredNamespaces = true;
+				}
+				namespaces[key.slice(6)] = value;
+			}
+		}
+		if (qualified.startsWith('xmlns:')) invalidXml();
+		checkPrefix(qualified, namespaces);
+		let expandedAttributes: Set<string> | undefined;
+		for (const key of prefixedAttributes ?? []) {
+			const colon = key.indexOf(':');
+			checkPrefix(key, namespaces);
+			expandedAttributes ??= new Set<string>();
+			const expanded = namespaces[key.slice(0, colon)] + '\u0000' + key.slice(colon + 1);
+			if (expandedAttributes.has(expanded)) invalidXml();
+			expandedAttributes.add(expanded);
+		}
 		const node: XmlNode = {
-			name: qualified.split(':').at(-1)!,
+			name: qualified.slice(qualified.indexOf(':') + 1),
 			attributes: attrs,
 			text: '',
 			children: []
@@ -193,7 +231,10 @@ export function parseXml(input: string): XmlNode {
 			if (root) invalidXml();
 			root = node;
 		}
-		if (source.startsWith('/>', offset)) offset += 2;
+		if (source.startsWith('/>', offset)) {
+			offset += 2;
+			complete(node);
+		}
 		else {
 			offset++;
 			stack.push({ node, qualified, namespaces });
@@ -210,17 +251,14 @@ export function child(node: XmlNode, name: string): XmlNode | undefined {
 	return node.children.find((child) => child.name === name);
 }
 export function stringText(node: XmlNode): string {
-	return decodeExcelText(
-		node.children
-			.filter((entry) => entry.name === 't' || entry.name === 'r')
-			.map((entry) =>
-				entry.name === 't'
-					? entry.text
-					: entry.children
-							.filter((part) => part.name === 't')
-							.map((part) => part.text)
-							.join('')
-			)
-			.join('')
-	);
+	let text = '';
+	for (const entry of node.children) {
+		if (entry.name === 't') text += entry.text;
+		else if (entry.name === 'r') {
+			for (const part of entry.children) {
+				if (part.name === 't') text += part.text;
+			}
+		}
+	}
+	return decodeExcelText(text);
 }

@@ -53,7 +53,7 @@ export class ZipArchive {
 		private limits: ArchiveLimits
 	) {
 		if (bytes.length > limits.fileBytes)
-			throw new XlsxLimitError('File is too large. The maximum size is 5 MB.');
+			throw new XlsxLimitError(`File exceeds the ${limits.fileBytes} bytes import limit.`);
 		if (bytes.length < 22) invalid();
 		const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 		let end = -1;

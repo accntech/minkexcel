@@ -1,7 +1,7 @@
 import { ZipArchive, type ArchiveLimits } from './zip.js';
 import { checkpoint } from './async.js';
 import { Workbook, XlsxError, XlsxLimitError, parseAddress, type CellValue } from './model.js';
-import { child, children, decodeExcelText, parseXml, stringText, type XmlNode } from './xml.js';
+import { child, children, decodeExcelText, parseXml, stringText, type XmlNode, type XmlVisitor } from './xml.js';
 type Limits = ArchiveLimits & { rows: number; columns: number; cells: number };
 export type ReadLimits = Partial<Limits>;
 const defaultLimits: Limits = {
@@ -131,15 +131,24 @@ export async function readWorkbook(
 ): Promise<Workbook> {
 	signal?.throwIfAborted();
 	try {
-		const limits = { ...defaultLimits, ...options };
+		const limits = { ...defaultLimits };
+		for (const key of Object.keys(defaultLimits) as Array<keyof Limits>) {
+			const value = options[key];
+			if (value === undefined) continue;
+			if (key === 'compressionRatio'
+				? !Number.isFinite(value) || value <= 0
+				: !Number.isSafeInteger(value) || value < 0)
+				throw new XlsxLimitError(`Invalid import limit: ${key}.`);
+			limits[key] = value;
+		}
 		if (bytes.byteLength > limits.fileBytes)
-			throw new XlsxLimitError('File is too large. The maximum size is 5 MB.');
+			throw new XlsxLimitError(`File exceeds the ${limits.fileBytes} bytes import limit.`);
 		const zip = new ZipArchive(bytes, limits);
 		let remaining = limits.totalBytes;
-		const readPart = async (path: string) => {
+		const readPart = async (path: string, onClose?: XmlVisitor) => {
 			const data = await zip.read(path, Math.min(limits.entryBytes, remaining), signal);
 			remaining -= data.length;
-			return parseXml(new TextDecoder('utf-8', { fatal: true }).decode(data));
+			return parseXml(new TextDecoder('utf-8', { fatal: true }).decode(data), onClose);
 		};
 		const rootRels = relationships(await readPart('_rels/.rels'), '');
 		const workbookRel = rootRels.find((entry) => entry.type.endsWith('/officeDocument'));
@@ -148,7 +157,15 @@ export async function readWorkbook(
 		if (document.name !== 'workbook') throw new XlsxError('Invalid workbook document.');
 		const rels = relationships(await readPart(relsPath(workbookRel.target)), workbookRel.target);
 		const shared = rels.find((entry) => entry.type.endsWith('/sharedStrings'));
-		const strings = shared ? children(await readPart(shared.target), 'si').map(stringText) : [];
+		const strings: string[] = [];
+		if (shared) {
+			const document = await readPart(shared.target, (node, parent, depth) => {
+				if (node.name !== 'si' || parent?.name !== 'sst' || depth !== 1) return false;
+				strings.push(stringText(node));
+				return true;
+			});
+			if (document.name !== 'sst') throw new XlsxError('Invalid shared-string document.');
+		}
 		const styleRel = rels.find((entry) => entry.type.endsWith('/styles'));
 		let dateStyles: boolean[] = [];
 		if (styleRel) {
@@ -181,15 +198,10 @@ export async function readWorkbook(
 			)?.[1];
 			const relation = rels.find((entry) => entry.id === id && entry.type.endsWith('/worksheet'));
 			if (!relation) throw new XlsxError('Missing worksheet relationship.');
-			const document = await readPart(relation.target);
-			if (document.name !== 'worksheet') throw new XlsxError('Invalid worksheet document.');
 			const sheet = book.addWorksheet(sheetNode.attributes.name);
-			const data = child(document, 'sheetData');
-			if (!data) throw new XlsxError('Missing worksheet data.');
 			let previousRow = 0;
 			let maximumColumn = 0;
-			for (const rowNode of children(data, 'row')) {
-				if (previousRow % 256 === 0) await checkpoint(signal);
+			const readRow = (rowNode: XmlNode) => {
 				const rowNumber =
 					rowNode.attributes.r === undefined ? previousRow + 1 : Number(rowNode.attributes.r);
 				if (rowNumber <= previousRow) throw new XlsxError('Invalid worksheet row order.');
@@ -213,6 +225,22 @@ export async function readWorkbook(
 					if (rowNumber * maximumColumn > limits.cells)
 						throw new XlsxLimitError(`The worksheet exceeds the ${limits.cells}-cell limit.`);
 					row.getCell(address.column).value = cellValue(node, strings, dateStyles, date1904);
+				}
+			};
+			// Consume completed rows before retaining a whole worksheet XML tree.
+			// The signal path retains row checkpoints for event-loop cancellation.
+			const document = await readPart(relation.target, signal ? undefined : (node, parent, depth) => {
+				if (node.name !== 'row' || parent?.name !== 'sheetData' || depth !== 2) return false;
+				readRow(node);
+				return true;
+			});
+			if (document.name !== 'worksheet') throw new XlsxError('Invalid worksheet document.');
+			const dataSections = children(document, 'sheetData');
+			if (dataSections.length !== 1) throw new XlsxError('Invalid or missing worksheet data.');
+			if (signal) {
+				for (const rowNode of children(dataSections[0], 'row')) {
+					if (previousRow % 256 === 0) await checkpoint(signal);
+					readRow(rowNode);
 				}
 			}
 		}

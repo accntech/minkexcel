@@ -51,6 +51,17 @@ export type WorksheetOptions = {
 	pageSetup?: PageSetup;
 };
 type Address = { row: number; column: number };
+const columnLetters = new Map<number, string>();
+
+function validateRow(row: number): void {
+	if (!Number.isInteger(row) || row < 1 || row > 1_048_576)
+		throw new XlsxError('Invalid worksheet row.');
+}
+
+function validateColumn(column: number): void {
+	if (!Number.isInteger(column) || column < 1 || column > 16_384)
+		throw new XlsxError('Invalid worksheet column.');
+}
 
 export class XlsxError extends Error {
 	readonly _tag = 'XlsxError';
@@ -59,29 +70,30 @@ export class XlsxError extends Error {
 export class XlsxLimitError extends XlsxError {}
 
 export function columnLetter(column: number): string {
-	if (!Number.isInteger(column) || column < 1 || column > 16_384)
-		throw new XlsxError('Invalid worksheet column.');
+	validateColumn(column);
+	const cached = columnLetters.get(column);
+	if (cached !== undefined) return cached;
 	let result = '';
 	for (let value = column; value > 0; value = Math.floor((value - 1) / 26))
 		result = String.fromCharCode(65 + ((value - 1) % 26)) + result;
+	columnLetters.set(column, result);
 	return result;
 }
 
 export function cellAddress(row: number, column: number): string {
-	if (!Number.isInteger(row) || row < 1 || row > 1_048_576)
-		throw new XlsxError('Invalid worksheet row.');
+	validateRow(row);
 	return columnLetter(column) + row;
 }
 
 export function parseAddress(address: string): Address {
 	const match = /^([A-Z]+)([1-9]\d*)$/.exec(address);
 	if (!match) throw new XlsxError('Invalid cell address.');
-	const column = [...match[1]].reduce(
-		(value, letter) => value * 26 + letter.charCodeAt(0) - 64,
-		0
-	);
+	let column = 0;
+	for (let index = 0; index < match[1].length; index++)
+		column = column * 26 + match[1].charCodeAt(index) - 64;
 	const row = Number(match[2]);
-	cellAddress(row, column);
+	validateRow(row);
+	validateColumn(column);
 	return { row, column };
 }
 
@@ -187,13 +199,13 @@ export class Row extends Styled {
 		readonly number: number
 	) {
 		super();
-		cellAddress(number, 1);
+		validateRow(number);
 	}
 	get cellCount(): number {
 		return Math.max(0, ...this.cells.keys());
 	}
 	getCell(column: number): Cell {
-		cellAddress(this.number, column);
+		validateColumn(column);
 		let cell = this.cells.get(column);
 		if (!cell) {
 			cell = new Cell(this, column);
@@ -254,7 +266,7 @@ export class Worksheet {
 		return count;
 	}
 	getRow(number: number): Row {
-		cellAddress(number, 1);
+		validateRow(number);
 		let row = this.rows.get(number);
 		if (!row) {
 			row = new Row(this, number);

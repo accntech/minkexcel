@@ -1,6 +1,7 @@
-/** Yield to the browser/server event loop and release the timer on cancellation. */
+/** Yield when a cancellation signal needs event-loop access; avoid timers otherwise. */
 export function checkpoint(signal?: AbortSignal): Promise<void> {
 	signal?.throwIfAborted();
+	if (!signal) return Promise.resolve();
 	return new Promise((resolve, reject) => {
 		const finish = () => {
 			signal?.removeEventListener('abort', abort);
