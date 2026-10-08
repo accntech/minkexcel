@@ -2,6 +2,7 @@ import ExcelJS from '../tools/node_modules/exceljs/excel.js';
 import { Workbook, readWorkbook, writeWorkbook } from '../dist/index.js';
 import { ZipArchive, writeZip } from '../src/zip.js';
 import { strict as assert } from 'node:assert';
+import { payrollTemplate, editPayroll, verifyPayroll } from './template-fixture.ts';
 
 const limits = { fileBytes: 5 * 1024 * 1024, entries: 1000, entryBytes: 20 * 1024 * 1024,
 	totalBytes: 50 * 1024 * 1024, compressionRatio: 200 };
@@ -13,6 +14,33 @@ const foreign = new ExcelJS.Workbook();
 foreign.addWorksheet('Data').addRow(literals);
 const foreignBytes = new Uint8Array(await foreign.xlsx.writeBuffer());
 const rows: Array<{ check: string; minkexcel: string; exceljs: string }> = [];
+
+// Independently read the new report export features rather than checking implementation text.
+const reportBook = new Workbook();
+reportBook.creator = 'Report author';
+reportBook.lastModifiedBy = 'Report reviewer';
+const reportSheet = reportBook.addWorksheet('Payroll');
+reportSheet.addRow(['Employee', 123.45]);
+reportSheet.getCell('A1').border = { top: { style: 'thin', color: { argb: 'FF000000' } }, bottom: { style: 'double' } };
+reportSheet.pageSetup.horizontalCentered = true;
+const independentReport = new ExcelJS.Workbook();
+await independentReport.xlsx.load(await writeWorkbook(reportBook) as unknown as ExcelJS.Buffer);
+assert.equal(independentReport.lastModifiedBy, 'Report reviewer');
+assert.equal(independentReport.worksheets[0].pageSetup.horizontalCentered, true);
+assert.equal(independentReport.worksheets[0].getCell('A1').border.top?.style, 'thin');
+assert.equal(independentReport.worksheets[0].getCell('A1').border.top?.color?.argb, 'FF000000');
+assert.equal(independentReport.worksheets[0].getCell('A1').border.bottom?.style, 'double');
+rows.push({ check: 'Report borders, print centering and independent last-modifier metadata', minkexcel: 'Preserved', exceljs: 'Supported' });
+
+const templateBytes = await payrollTemplate(10);
+const ownTemplate = await readWorkbook(templateBytes, { preserveTemplate: true });
+editPayroll(ownTemplate, 10);
+await verifyPayroll(await writeWorkbook(ownTemplate), 10);
+const excelTemplate = new ExcelJS.Workbook();
+await excelTemplate.xlsx.load(templateBytes as unknown as ExcelJS.Buffer);
+editPayroll(excelTemplate, 10);
+await verifyPayroll(new Uint8Array(await excelTemplate.xlsx.writeBuffer()), 10);
+rows.push({ check: 'Edit payroll template values; retain formatting, comments, protection and layout', minkexcel: 'Preserved (template mode)', exceljs: 'Preserved' });
 
 async function ownValues(bytes: Uint8Array) {
 	return (await readWorkbook(bytes)).worksheets[0].getRow(1).values.slice(1);
@@ -91,5 +119,4 @@ These are specific reproducible checks, not an overall reliability score. ExcelJ
 `;
 await Bun.write(new URL('reliability.json', import.meta.url), JSON.stringify({ metadata, rows,
 	strings: { input: literals, ownWithOwn, ownWithExcel, foreignWithOwn, foreignWithExcel } }, null, 2) + '\n');
-await Bun.write(new URL('RELIABILITY.md', import.meta.url), report);
 console.log(report);

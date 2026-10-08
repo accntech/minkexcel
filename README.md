@@ -59,8 +59,8 @@ Verified on October 8, 2026:
 These are verified versions, not minimum supported versions. Other browsers
 and runtime versions need validation in your application.
 
-The full browser ESM bundle measures **29.9 KiB minified** (30,624 bytes) and
-**11.0 KiB gzipped** (11,301 bytes), using Bun 1.4.0 on October 8, 2026. This
+The full browser ESM bundle measures **43.8 KiB minified** (44,845 bytes) and
+**15.1 KiB gzipped** (15,420 bytes), using Bun 1.4.0 on October 8, 2026. This
 covers all public exports and excludes declarations and the icon. See
 [contributor instructions](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
 to reproduce the measurement.
@@ -81,10 +81,10 @@ Consumer bundles measured with Bun 1.4.0 on October 8, 2026:
 
 | Public imports | Minified bytes | Gzip bytes |
 | --- | ---: | ---: |
-| `Workbook` | 4,532 | 1,763 |
-| `Workbook`, `writeWorkbook` | 16,630 | 6,090 |
-| `readWorkbook` | 19,150 | 7,513 |
-| All public exports | 30,624 | 11,301 |
+| `Workbook` | 5,342 | 2,015 |
+| `Workbook`, `writeWorkbook` | 25,056 | 8,858 |
+| `readWorkbook` | 26,753 | 9,550 |
+| All public exports | 44,845 | 15,420 |
 
 Sizes depend on the bundler and the APIs your application uses. Methods on
 retained model classes generally remain. Direct browser or Node.js imports
@@ -425,7 +425,7 @@ when you need its broader workbook model, richer formatting or Node streaming I/
 template mode retains original parts for value edits. MinkExcel keeps the
 top-level I/O functions and does not expose `workbook.xlsx.load/writeBuffer`.
 
-This comparison uses MinkExcel 0.1.0 and ExcelJS 4.4.0, the version used by the
+This comparison uses MinkExcel 0.1.1 and ExcelJS 4.4.0, the version used by the
 benchmark. ExcelJS features are documented in its
 [versioned README](https://github.com/exceljs/exceljs/blob/v4.4.0/README.md)
 and dependencies in its
@@ -445,36 +445,52 @@ and dependencies in its
 
 ### Measured performance
 
-MinkExcel was faster for both operations at every tested size (100, 1,000 and
-10,000 data rows) across numeric, text and mixed workloads on Bun and Node.js.
-At 10,000 rows, exports were about **1.9–2.8× faster** and imports **1.2–1.5×
-faster** than ExcelJS 4.4.0 in this run:
+The refreshed 10,000-row numeric, text and mixed workloads measured exports
+about **1.9–2.8× faster** and value imports **1.1–1.4× faster**
+than ExcelJS 4.4.0 in these local runs:
 
 | Runtime | Workload, 10,000 rows | MinkExcel export ms | ExcelJS export ms | MinkExcel import ms | ExcelJS import ms |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Bun 1.4.0 | Numeric | 56.8 | 114.5 | 68.5 | 96.3 |
-| Bun 1.4.0 | Text | 70.1 | 130.9 | 85.5 | 121.7 |
-| Bun 1.4.0 | Mixed | 69.9 | 133.7 | 79.9 | 118.1 |
-| Node 24.12.0 | Numeric | 60.7 | 167.7 | 64.1 | 85.5 |
-| Node 24.12.0 | Text | 66.6 | 186.1 | 80.9 | 94.2 |
-| Node 24.12.0 | Mixed | 69.3 | 192.2 | 75.5 | 93.4 |
+| Bun 1.4.0 | Numeric | 57.1 | 118.6 | 68.6 | 95.6 |
+| Bun 1.4.0 | Text | 69.3 | 128.3 | 89.4 | 117.7 |
+| Bun 1.4.0 | Mixed | 71.4 | 141.1 | 82.7 | 110.7 |
+| Node 24.12.0 | Numeric | 65.0 | 178.8 | 72.7 | 80.9 |
+| Node 24.12.0 | Text | 66.7 | 188.6 | 87.2 | 98.0 |
+| Node 24.12.0 | Mixed | 77.2 | 198.6 | 78.6 | 92.6 |
 
 Measured October 8, 2026 on an Apple M4 Pro. Each worksheet has eight columns
-plus a header. Times are medians of eleven samples after one warmup, using the
+plus a header. Times are medians of 7 samples after one warmup, using the
 built ES modules without an AbortSignal. Export includes workbook construction
-and serialization with the same supported styles. Both readers receive the
-same compressed ExcelJS output. Every data cell is checked with both readers
-outside timings, including a MinkExcel roundtrip.
+and serialization with the same supported styles, including header borders and
+horizontal print centering. Both readers receive the same compressed ExcelJS
+output. Every data cell and the new report features are checked outside timings.
 
 MinkExcel imports values while ExcelJS builds a richer presentation model.
 Both writers use DEFLATE, with different compression settings and workbook XML.
 These document-model measurements do not compare streaming, browser speed or
 peak memory, and are not universal performance guarantees. Full results,
-raw samples and file sizes: [Bun](benchmarks/MATRIX.md)
-([JSON](benchmarks/matrix.json)), [Node](benchmarks/MATRIX-NODE.md)
-([JSON](benchmarks/matrix-node.json)). See
+raw samples and file sizes: [Bun JSON](benchmarks/matrix.json) and
+[Node JSON](benchmarks/matrix-node.json). See
 [CONTRIBUTING.md](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
 to reproduce them.
+
+### Payroll template workflow
+
+The separate template benchmark measures value-only import, preserving import
+and a complete import/edit/export workflow. ExcelJS verifies every edited value
+and the retained styles, borders, fills, widths, heights, merges, comments,
+protection, frozen headings, print settings and formulas outside the timings.
+
+| Runtime | Employees | MinkExcel template import ms | ExcelJS import ms | MinkExcel edit workflow ms | ExcelJS edit workflow ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Bun 1.4.0 | 10,000 | 58.0 | 64.5 | 115.9 | 123.4 |
+| Node 24.12.0 | 10,000 | 65.3 | 55.4 | 133.5 | 145.8 |
+
+Template mode retains archive parts for value edits; ExcelJS builds an editable
+presentation model. It retains more data than a value-only import. Neither
+library calculates formula caches. These results measure elapsed time, not peak
+memory or browser speed. Full results and raw samples:
+[Bun JSON](benchmarks/template.json) and [Node JSON](benchmarks/template-node.json).
 
 ### File integrity and text preservation
 
@@ -496,7 +512,7 @@ MinkExcel's reader validates CRC32, enforces XML namespace rules and rejects
 DTDs. Configurable import bounds also reject invalid limit values instead of
 silently disabling checks. These results cover specific cases; ExcelJS has
 broader workbook support, and reliability still depends on the features and
-files your application uses. See the [reproducible checks](benchmarks/RELIABILITY.md)
+files your application uses. See the [reproducible checks](benchmarks/reliability.ts)
 and [recorded values](benchmarks/reliability.json).
 
 ## Development and releases

@@ -1,10 +1,20 @@
 {
   "metadata": {
-    "date": "2026-10-08T10:28:32.267Z",
+    "date": "2026-10-08T15:17:08.374Z",
     "runtime": "Bun 1.4.0",
     "exceljs": "4.4.0"
   },
   "rows": [
+    {
+      "check": "Report borders, print centering and independent last-modifier metadata",
+      "minkexcel": "Preserved",
+      "exceljs": "Supported"
+    },
+    {
+      "check": "Edit payroll template values; retain formatting, comments, protection and layout",
+      "minkexcel": "Preserved (template mode)",
+      "exceljs": "Preserved"
+    },
     {
       "check": "Preserve string \"_x0041_\" with both readers",
       "minkexcel": "Preserved",

@@ -24,11 +24,15 @@ function values(workload: Workload, row: number): CellValue[] {
 
 function populate(book: Workbook | ExcelJS.Workbook, workload: Workload, count: number) {
 	book.creator = 'MinkExcel benchmark';
+	book.lastModifiedBy = 'Benchmark runner';
 	book.created = date;
 	book.modified = date;
 	const sheet = book.addWorksheet('Data', { views: [{ state: 'frozen', ySplit: 1 }] });
 	sheet.columns = headers.map(() => ({ width: 20 }));
-	sheet.addRow(headers).font = { bold: true };
+	const header = sheet.addRow(headers);
+	header.font = { bold: true };
+	header.eachCell((cell) => { cell.border = { bottom: { style: 'thin' } }; });
+	sheet.pageSetup = { horizontalCentered: true, paperSize: 9 };
 	for (let row = 1; row <= count; row++) sheet.addRow(values(workload, row));
 	if (workload === 'mixed') sheet.getColumn(3).numFmt = 'yyyy-mm-dd';
 	if (workload === 'numeric') sheet.getColumn(2).numFmt = '#,##0.00';
@@ -63,6 +67,9 @@ for (const workload of ['numeric', 'text', 'mixed'] as const) {
 		const independent = new ExcelJS.Workbook();
 		await independent.xlsx.load(ownExport.result as unknown as ExcelJS.Buffer);
 		const roundtrip = await readWorkbook(ownExport.result);
+		assert.equal(independent.lastModifiedBy, 'Benchmark runner');
+		assert.equal(independent.worksheets[0].getCell('A1').border.bottom?.style, 'thin');
+		assert.equal(independent.worksheets[0].pageSetup.horizontalCentered, true);
 		// Check every cell, including blanks, with both readers outside the timings.
 		for (const book of [ownImport.result, foreignImport.result, independent, roundtrip]) {
 			const sheet = book.worksheets[0];
@@ -84,7 +91,6 @@ for (const workload of ['numeric', 'text', 'mixed'] as const) {
 const excelPackage = JSON.parse(await readFile(new URL('../tools/node_modules/exceljs/package.json', import.meta.url), 'utf8'));
 const isBun = Boolean(process.versions.bun);
 const jsonName = isBun ? 'matrix.json' : 'matrix-node.json';
-const reportName = isBun ? 'MATRIX.md' : 'MATRIX-NODE.md';
 const command = isBun ? 'bun run bench:matrix' : 'npm run bench:node';
 const metadata = { date: new Date().toISOString(), runtime: isBun ? `Bun ${process.versions.bun}` : `Node ${process.versions.node}`,
 	platform: `${process.platform} ${process.arch}`, cpu: cpus()[0]?.model,
@@ -94,7 +100,7 @@ const report = `# ExcelJS comparison across workloads
 
 ${metadata.date}; ${metadata.runtime}; ${metadata.platform}; ${metadata.cpu}; ExcelJS ${metadata.exceljs}.
 
-Median of ${iterations} samples after one warmup. Uses the built package ES modules. Each worksheet has eight columns and a header. Numeric data includes fractions, negatives and zeros; text includes leading-zero identifiers, Unicode, XML characters, literal formula-like text and whitespace; mixed data includes strings, dates, booleans, numbers, cached formulas, blanks and errors. Both writers apply the same supported styles. Export includes workbook construction. Both readers receive the same compressed ExcelJS output. No AbortSignal is supplied. Every data cell is checked with both readers outside timed samples, including a MinkExcel roundtrip. Raw samples and file sizes are in ${jsonName}. Literal Excel escape sequences are tested separately by the reliability comparison because ExcelJS 4.4.0 does not preserve them in these checks.
+Median of ${iterations} samples after one warmup. Uses the built package ES modules. Each worksheet has eight columns and a header. Numeric data includes fractions, negatives and zeros; text includes leading-zero identifiers, Unicode, XML characters, literal formula-like text and whitespace; mixed data includes strings, dates, booleans, numbers, cached formulas, blanks and errors. Both writers apply the same supported styles, including header borders and horizontal print centering, and independent last-modifier metadata. Export includes workbook construction. Both readers receive the same compressed ExcelJS output. No AbortSignal is supplied. Every data cell is checked with both readers outside timed samples, including a MinkExcel roundtrip. The new report features are checked with ExcelJS. Raw samples and file sizes are in ${jsonName}. Literal Excel escape sequences are tested separately by the reliability comparison because ExcelJS 4.4.0 does not preserve them in these checks.
 
 | Workload | Data rows | MinkExcel export ms | ExcelJS export ms | MinkExcel import ms | ExcelJS import ms |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -103,5 +109,4 @@ ${lines.join('\n')}
 MinkExcel reads values while ExcelJS builds a richer presentation model. These local document-model results do not compare ExcelJS streaming, browser performance or peak memory, and do not establish a universal speed advantage. Reproduce with \`${command}\` after installing tools and building the package. The Node command requires a runtime with native TypeScript type stripping; it was verified on Node 24.12.0.
 `;
 await writeFile(new URL(jsonName, import.meta.url), JSON.stringify({ metadata, rows }, null, 2) + '\n');
-await writeFile(new URL(reportName, import.meta.url), report);
 console.log(report);

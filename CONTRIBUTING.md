@@ -96,8 +96,10 @@ bun run test:interop
 This checks the built package against the pinned ExcelJS version in `tools/`.
 Both readers verify text preservation from both writers. Identical malformed
 files exercise CRC32, truncated ZIP, reserved XML namespace and DTD handling.
+ExcelJS independently verifies report borders, print centering, modifier metadata
+and edited synthetic payroll templates with comments, protection and layout.
 The command asserts MinkExcel's expected behavior and records the comparison in
-`benchmarks/RELIABILITY.md` and `benchmarks/reliability.json`.
+`benchmarks/reliability.json`.
 
 Push, pull request and release workflows run build, unit, tree-shaking,
 interoperability, browser and packaging checks. Timing benchmarks run separately
@@ -108,27 +110,39 @@ because hardware and runtime load affect results.
 Run on an otherwise idle machine after building. Run commands sequentially;
 concurrent benchmarks distort timings. Set `XLSX_BENCH_ITERATIONS` to change the
 sample count (default seven for the workload matrix). The recorded comparisons
-use eleven samples after one warmup:
+use seven samples after one warmup for the matrices and template workflows:
 
 ```sh
 bun run build
-XLSX_BENCH_ITERATIONS=11 bun run bench:matrix
-XLSX_BENCH_ITERATIONS=11 npm run bench:node
+XLSX_BENCH_ITERATIONS=7 bun run bench:matrix
+XLSX_BENCH_ITERATIONS=7 npm run bench:node
+XLSX_BENCH_ITERATIONS=7 bun run bench:template
+XLSX_BENCH_ITERATIONS=7 bun run bench:template:node
 ```
 
 `benchmarks/matrix.ts` tests numeric, text and mixed data at 100, 1,000 and
 10,000 rows with eight columns. It imports the built ES modules, includes
 workbook construction in export timing and feeds identical compressed input to
-both readers. Every data cell is verified with both readers outside timings,
+both readers. Headers include borders, print settings include horizontal centering,
+and last-modifier metadata is independent of the creator. Every data cell is verified with both readers outside timings,
 including a MinkExcel roundtrip. Node requires native TypeScript type stripping;
 the command was verified with Node 24.12.0.
 
-Bun writes `benchmarks/MATRIX.md` and `benchmarks/matrix.json`; Node writes
-`benchmarks/MATRIX-NODE.md` and `benchmarks/matrix-node.json`. JSON includes raw
+Bun writes `benchmarks/matrix.json`; Node writes
+`benchmarks/matrix-node.json`. JSON includes raw
 timing samples and output sizes. Review runtime, hardware, warmups, sample count
 and scope differences with each result. No AbortSignal is supplied. MinkExcel
 imports values; ExcelJS also builds a richer presentation model. These checks
 do not measure streaming, peak memory or browser speed.
+
+`benchmarks/template.ts` measures value-only import, template-preserving import
+and the complete import/edit/export payroll workflow at 100, 1,000 and 10,000
+employees. It uses the independent synthetic ExcelJS fixture in
+`benchmarks/template-fixture.ts`. Every edited value and the preserved formatting,
+merges, comments, protection and layout are independently checked outside timings.
+Results and raw samples are saved to `benchmarks/template.json` on Bun and
+`benchmarks/template-node.json` on Node. Template mode retains archive
+parts for value editing; it does not expose ExcelJS's full presentation model.
 
 The original mixed report fixture remains available for comparison with the
 pre-optimization measurements in `benchmarks/baseline.json`:
@@ -137,7 +151,7 @@ pre-optimization measurements in `benchmarks/baseline.json`:
 XLSX_BENCH_ITERATIONS=11 bun run bench
 ```
 
-It updates `benchmarks/RESULTS.md` and `benchmarks/results.json`. Keep the
+It updates `benchmarks/results.json`. Keep the
 historical baseline unchanged when recording a new result.
 
 ## Browser bundle size

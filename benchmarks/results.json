@@ -1,39 +1,39 @@
 {
   "metadata": {
-    "date": "2026-10-08T10:27:35.515Z",
+    "date": "2026-10-08T15:17:55.337Z",
     "runtime": "Bun 1.4.0",
     "platform": "darwin arm64",
     "cpu": "Apple M4 Pro",
     "exceljs": "4.4.0",
-    "iterations": 11,
+    "iterations": 5,
     "warmups": 1,
     "minkexcelCompression": "DEFLATE via CompressionStream"
   },
   "rows": [
     {
       "rows": 100,
-      "minkexcelExportMs": 1.164999999999992,
-      "exceljsExportMs": 3.627959000000004,
-      "minkexcelImportMs": 1.9420410000000174,
-      "exceljsImportMs": 2.6017500000000098,
+      "minkexcelExportMs": 1.453542000000013,
+      "exceljsExportMs": 3.6028749999999974,
+      "minkexcelImportMs": 1.5761249999999905,
+      "exceljsImportMs": 3.386499999999984,
       "minkexcelBytes": 9047,
       "exceljsBytes": 11995
     },
     {
       "rows": 1000,
-      "minkexcelExportMs": 9.661125000000027,
-      "exceljsExportMs": 15.335749999999962,
-      "minkexcelImportMs": 11.385916000000066,
-      "exceljsImportMs": 13.964749999999981,
+      "minkexcelExportMs": 8.936125000000004,
+      "exceljsExportMs": 17.328750000000014,
+      "minkexcelImportMs": 9.879375000000039,
+      "exceljsImportMs": 14.756584000000032,
       "minkexcelBytes": 53320,
       "exceljsBytes": 57472
     },
     {
       "rows": 10000,
-      "minkexcelExportMs": 90.74849999999992,
-      "exceljsExportMs": 150.42458299999998,
-      "minkexcelImportMs": 92.29983300000004,
-      "exceljsImportMs": 126.14375000000018,
+      "minkexcelExportMs": 93.74316699999997,
+      "exceljsExportMs": 160.28266699999995,
+      "minkexcelImportMs": 95.0224159999998,
+      "exceljsImportMs": 129.91333299999997,
       "minkexcelBytes": 496985,
       "exceljsBytes": 502479
     }

@@ -37,6 +37,8 @@
     "bench": "bun benchmarks/exceljs.ts",
     "bench:matrix": "bun benchmarks/matrix.ts",
     "bench:node": "node benchmarks/matrix.ts",
+    "bench:template": "bun benchmarks/template.ts",
+    "bench:template:node": "node benchmarks/template.ts",
     "test:interop": "bun benchmarks/reliability.ts",
     "test:browser": "bun tests/browser.ts",
     "test:treeshaking": "bun tests/treeshaking.ts",
