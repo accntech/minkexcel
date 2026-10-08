@@ -2,6 +2,10 @@
 
 <img src="assets/icon.png" alt="MinkExcel white mink and XL icon on a solid Excel green squircle" width="160" height="160">
 
+[![npm version](https://img.shields.io/npm/v/minkexcel?style=plastic&color=orange)](https://www.npmjs.com/package/minkexcel)
+[![npm monthly downloads](https://img.shields.io/npm/dm/minkexcel?style=plastic&label=downloads&color=brightgreen)](https://www.npmjs.com/package/minkexcel)
+[![GitHub stars](https://img.shields.io/github/stars/accntech/minkexcel?style=social&label=Stars)](https://github.com/accntech/minkexcel/stargazers)
+
 A simple, fast replacement for common ExcelJS XLSX import/export
 workflows, with **zero runtime dependencies**. Export application data, create
 formatted reports and read spreadsheet values in browsers, Web Workers, Bun
