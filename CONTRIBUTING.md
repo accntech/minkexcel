@@ -30,7 +30,7 @@ bun tools/node_modules/@playwright/test/cli.js install chromium
 bun run test:browser
 ```
 
-`tests/browser.ts` builds a browser bundle and tests compressed import/export,
+`tests/browser.ts` builds through a consumer entry and tests compressed import/export,
 a Blob roundtrip, scalar values and a module Web Worker. It uses a local server
 and Playwright's Chromium. This harness does not verify Firefox or Safari.
 
@@ -47,9 +47,9 @@ files exercise CRC32, truncated ZIP, reserved XML namespace and DTD handling.
 The command asserts MinkExcel's expected behavior and records the comparison in
 `benchmarks/RELIABILITY.md` and `benchmarks/reliability.json`.
 
-Push, pull request and release workflows run build, unit, interoperability,
-browser and packaging checks. Timing benchmarks run separately because hardware
-and runtime load affect results.
+Push, pull request and release workflows run build, unit, tree-shaking,
+interoperability, browser and packaging checks. Timing benchmarks run separately
+because hardware and runtime load affect results.
 
 ## Benchmarks
 
@@ -90,27 +90,24 @@ historical baseline unchanged when recording a new result.
 
 ## Browser bundle size
 
-Run this from the repository root to measure all public exports with Bun's
-browser ESM bundler and minifier. Gzip uses Node's built-in compressor defaults:
+Run this from the repository root to check tree-shaking and measure consumer
+bundles with Bun's browser ESM bundler and minifier. Gzip uses Node's built-in
+compressor defaults:
 
 ```sh
-bun --eval '
-import { gzipSync } from "node:zlib";
-const build = await Bun.build({
-  entrypoints: ["./src/index.ts"],
-  target: "browser",
-  format: "esm",
-  minify: true,
-});
-if (!build.success) throw new AggregateError(build.logs);
-const bytes = new Uint8Array(await build.outputs[0].arrayBuffer());
-console.log({
-  bun: Bun.version,
-  minifiedBytes: bytes.length,
-  gzipBytes: gzipSync(bytes).length,
-});
-'
+bun run build
+bun run test:treeshaking
 ```
+
+`tests/treeshaking.ts` copies the built package and its manifest into a temporary
+consumer's `node_modules/`. It checks model-only, export-only, import-only,
+unused-import and full bundles through the public `minkexcel` entry point,
+asserts that unused code is absent and roundtrips values between the separate
+model, writer and reader bundles. The temporary files are removed afterward.
+
+Keep module initialization free of externally visible side effects to preserve
+the package's `sideEffects: false` declaration. Pure annotations belong only on
+local initialization that can safely be omitted when its result is unused.
 
 Record the bundler version and measurement date alongside size claims.
 This measures JavaScript, excluding TypeScript declarations and the icon.

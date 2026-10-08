@@ -62,6 +62,9 @@ jobs:
           bun run build
           bun run test:interop
 
+      - name: Check consumer tree-shaking
+        run: bun run test:treeshaking
+
       - name: Install Chromium
         run: bun tools/node_modules/@playwright/test/cli.js install --with-deps chromium
 

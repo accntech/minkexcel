@@ -28,6 +28,8 @@ jobs:
         run: |
           bun run build
           bun run test
+      - name: Check consumer tree-shaking
+        run: bun run test:treeshaking
       - name: Check ExcelJS interoperability and file integrity
         run: bun run test:interop
       - name: Install Chromium

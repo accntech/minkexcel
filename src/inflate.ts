@@ -55,10 +55,16 @@ class Huffman {
 		return invalid();
 	}
 }
-const fixedLiteral = new Huffman(
-	Array.from({ length: 288 }, (_, i) => (i < 144 ? 8 : i < 256 ? 9 : i < 280 ? 7 : 8))
-);
-const fixedDistance = new Huffman(new Array(32).fill(5));
+// Build once on the first fixed block, so importing an unused reader does no work.
+let fixedTrees: [Huffman, Huffman] | undefined;
+function fixed(): [Huffman, Huffman] {
+	return (fixedTrees ??= [
+		new Huffman(
+			Array.from({ length: 288 }, (_, i) => (i < 144 ? 8 : i < 256 ? 9 : i < 280 ? 7 : 8))
+		),
+		new Huffman(new Array(32).fill(5))
+	]);
+}
 const codeOrder = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 // The code-length alphabet's exact order is specified in §3.2.7.
 const lengthBase = [
@@ -135,7 +141,7 @@ export async function inflate(
 			bits.offset += length * 8;
 			await checkpoint(signal);
 		} else if (type === 1 || type === 2) {
-			const [literals, distances] = type === 1 ? [fixedLiteral, fixedDistance] : dynamic(bits);
+			const [literals, distances] = type === 1 ? fixed() : dynamic(bits);
 			for (;;) {
 				if (++work >= 4096) {
 					work = 0;

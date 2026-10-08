@@ -51,7 +51,7 @@ export type WorksheetOptions = {
 	pageSetup?: PageSetup;
 };
 type Address = { row: number; column: number };
-const columnLetters = new Map<number, string>();
+const columnLetters = /* @__PURE__ */ new Map<number, string>();
 
 function validateRow(row: number): void {
 	if (!Number.isInteger(row) || row < 1 || row > 1_048_576)

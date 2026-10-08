@@ -4,6 +4,7 @@
   "license": "MIT",
   "description": "Simple, dependency-free XLSX import and export. A lightweight alternative to ExcelJS.",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -36,6 +37,7 @@
     "bench:matrix": "bun benchmarks/matrix.ts",
     "bench:node": "node benchmarks/matrix.ts",
     "test:interop": "bun benchmarks/reliability.ts",
-    "test:browser": "bun tests/browser.ts"
+    "test:browser": "bun tests/browser.ts",
+    "test:treeshaking": "bun tests/treeshaking.ts"
   }
 }

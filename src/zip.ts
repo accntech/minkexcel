@@ -18,9 +18,10 @@ type Entry = {
 	end: number;
 	local: number;
 };
-const encoder = new TextEncoder(),
-	decoder = new TextDecoder('utf-8', { fatal: true });
-const crcTable = Uint32Array.from({ length: 256 }, (_, i) => {
+// These local initializations have no externally visible effects when unused.
+const encoder = /* @__PURE__ */ new TextEncoder();
+const decoder = /* @__PURE__ */ new TextDecoder('utf-8', { fatal: true });
+const crcTable = /* @__PURE__ */ Uint32Array.from({ length: 256 }, (_, i) => {
 	let value = i;
 	for (let bit = 0; bit < 8; bit++) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
 	return value >>> 0;

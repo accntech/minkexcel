@@ -3,8 +3,8 @@
 `.github/workflows/publish.yml` publishes to npm when a GitHub release is
 published. It checks out the release tag, verifies that the tag matches the
 version in `package.json`, builds JavaScript and TypeScript declarations, and
-runs unit, ExcelJS interoperability, Chromium and Web Worker checks before
-publishing. The same checks run on pushes and pull requests. The npm package includes `dist/`,
+runs unit, tree-shaking, ExcelJS interoperability, Chromium and Web Worker checks
+before publishing. The same checks run on pushes and pull requests. The npm package includes `dist/`,
 the README, the manifest, the MIT license and the icon. The library remains
 dependency-free; TypeScript is installed only in the separate `tools/` project.
 
@@ -18,6 +18,7 @@ initial version from a local checkout with an npm account that owns the package:
 bun install --cwd tools --frozen-lockfile --ignore-scripts
 bun run build
 bun run test
+bun run test:treeshaking
 bun run test:interop
 bun tools/node_modules/@playwright/test/cli.js install chromium
 bun run test:browser

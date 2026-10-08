@@ -38,11 +38,36 @@ Verified on October 8, 2026:
 These are verified versions, not minimum supported versions. Other browsers
 and runtime versions need validation in your application.
 
-The full browser ESM bundle measures **29.9 KiB minified** (30,598 bytes) and
-**11.0 KiB gzipped** (11,291 bytes), using Bun 1.4.0 on October 8, 2026. This
+The full browser ESM bundle measures **29.9 KiB minified** (30,624 bytes) and
+**11.0 KiB gzipped** (11,301 bytes), using Bun 1.4.0 on October 8, 2026. This
 covers all public exports and excludes declarations and the icon. See
 [contributor instructions](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
 to reproduce the measurement.
+
+### Tree-shaking
+
+Use named imports in an application build with tree-shaking enabled:
+
+```ts
+import { Workbook, writeWorkbook } from "minkexcel";
+```
+
+MinkExcel preserves ES modules, declares `sideEffects: false` and initializes
+fixed decompression tables only when needed. An export-only bundle can exclude
+the reader and inflater; a model-only bundle can exclude all ZIP and XML code.
+
+Consumer bundles measured with Bun 1.4.0 on October 8, 2026:
+
+| Public imports | Minified bytes | Gzip bytes |
+| --- | ---: | ---: |
+| `Workbook` | 4,532 | 1,763 |
+| `Workbook`, `writeWorkbook` | 16,630 | 6,090 |
+| `readWorkbook` | 19,150 | 7,513 |
+| All public exports | 30,624 | 11,301 |
+
+Sizes depend on the bundler and the APIs your application uses. Methods on
+retained model classes generally remain. Direct browser or Node.js imports
+without a bundling step do not remove unused code or installed package files.
 
 ## Quick start
 

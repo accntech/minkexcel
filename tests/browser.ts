@@ -1,16 +1,32 @@
 import { chromium } from "../tools/node_modules/@playwright/test/index.mjs";
 import { strict as assert } from "node:assert";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { unzip } from "./helpers.js";
 
 // Optional tooling is isolated from the dependency-free library and unit tests.
-const build = await Bun.build({
-  entrypoints: [new URL("../src/index.ts", import.meta.url).pathname],
-  target: "browser",
-  format: "esm",
-});
-if (!build.success)
-  throw new AggregateError(build.logs, "Browser bundle failed");
-const module = await build.outputs[0].text();
+// Use a consumer entry outside the side-effect-free package. Bun 1.4.0 drops
+// definitions when the package's re-export barrel is itself the build entry.
+const directory = await mkdtemp(join(tmpdir(), "minkexcel-browser-"));
+let module: string;
+try {
+  const entrypoint = join(directory, "consumer.js");
+  await writeFile(
+    entrypoint,
+    `export * from ${JSON.stringify(new URL("../src/index.ts", import.meta.url).pathname)};`,
+  );
+  const build = await Bun.build({
+    entrypoints: [entrypoint],
+    target: "browser",
+    format: "esm",
+  });
+  if (!build.success)
+    throw new AggregateError(build.logs, "Browser bundle failed");
+  module = await build.outputs[0].text();
+} finally {
+  await rm(directory, { recursive: true, force: true });
+}
 const worker = `import {readWorkbook,writeWorkbook} from '/xlsx.js';
 self.onmessage=async()=>{
  try {
