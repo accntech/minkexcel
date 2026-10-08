@@ -1,5 +1,6 @@
 import { inflateRawSync } from 'node:zlib';
 import { expect } from 'bun:test';
+import { writeZip } from '../src/zip.js';
 
 /** Independent test decoder, using the platform inflater rather than the package reader. */
 export function unzip(bytes: Uint8Array): Map<string, string> {
@@ -36,4 +37,14 @@ export async function fixture(date1904 = false) {
 			new URL(`fixtures/exceljs-${date1904 ? '1904' : '1900'}.xlsx`, import.meta.url)
 		).arrayBuffer()
 	);
+}
+
+/** Keep the independent producer's package while changing only the parts under test. */
+export async function modifiedFixture(parts: Record<string, string | undefined>) {
+	const contents = unzip(await fixture());
+	for (const [path, xml] of Object.entries(parts)) {
+		if (xml === undefined) contents.delete(path);
+		else contents.set(path, xml);
+	}
+	return writeZip(contents);
 }

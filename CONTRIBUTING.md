@@ -21,6 +21,13 @@ The build writes ES modules and TypeScript declarations to `dist/`.
 Unit tests and synthetic workbook fixtures live in `tests/`; unit tests can also
 run without installing the optional tools.
 
+Run `bun run test:coverage` to inspect unit-test coverage. Tests are grouped by
+the public worksheet model, import, export, cancellation, XML and ZIP/DEFLATE
+handling. Worksheet import cases exercise both the visitor-based path without
+a signal and the cancellable path with a signal. Independent ExcelJS fixtures,
+a stored ZIP fixture and Node's zlib help catch reader/writer defects that a
+roundtrip through MinkExcel alone could hide.
+
 ## Browser and Web Worker checks
 
 Install Chromium before running the harness:

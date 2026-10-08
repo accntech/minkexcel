@@ -33,6 +33,7 @@
     "build": "node tools/node_modules/typescript/bin/tsc -p tsconfig.build.json",
     "prepack": "npm run build",
     "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "bench": "bun benchmarks/exceljs.ts",
     "bench:matrix": "bun benchmarks/matrix.ts",
     "bench:node": "node benchmarks/matrix.ts",
