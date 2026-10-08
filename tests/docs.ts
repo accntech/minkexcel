@@ -1,7 +1,7 @@
 import { chromium, expect } from '../tools/node_modules/@playwright/test/index.mjs';
 import { strict as assert } from 'node:assert';
 import { existsSync } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, stat } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 
 assert.ok(existsSync('build/docs/index.html'), 'Documentation must build a static index page.');
@@ -11,7 +11,13 @@ const server = Bun.serve({
   async fetch(request) {
     const pathname = decodeURIComponent(new URL(request.url).pathname);
     if (!pathname.startsWith('/minkexcel/')) return new Response('Not found', { status: 404 });
-    const path = resolve(root, pathname.slice('/minkexcel/'.length) || 'index.html');
+    let path = resolve(root, pathname.slice('/minkexcel/'.length) || 'index.html');
+    try {
+      if ((await stat(path)).isDirectory()) {
+        if (!pathname.endsWith('/')) return Response.redirect(new URL(pathname + '/' + new URL(request.url).search, request.url), 301);
+        path = resolve(path, 'index.html');
+      }
+    } catch { return new Response('Not found', { status: 404 }); }
     if (!path.startsWith(root + '/')) return new Response('Not found', { status: 404 });
     const file = Bun.file(path);
     if (!await file.exists()) return new Response('Not found', { status: 404 });
@@ -25,6 +31,22 @@ try {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   const base = `http://127.0.0.1:${server.port}/minkexcel/`;
+  for (const slug of ['getting-started', 'installation', 'api', 'comparison', 'benchmarks']) {
+    assert.equal((await page.request.get(`${base}${slug}/`)).status(), 200, `${slug} supports a clean directory URL`);
+    const redirect = await page.request.get(`${base}${slug}?from=bookmark`, { maxRedirects: 0 });
+    assert.equal(redirect.status(), 301);
+    assert.equal(new URL(redirect.headers().location, base).href, `${base}${slug}/?from=bookmark`);
+    await page.goto(`${base}${slug}.html?from=bookmark#main`);
+    await expect(page).toHaveURL(`${base}${slug}/?from=bookmark#main`);
+    await expect(page.locator('h1')).toBeVisible();
+  }
+  for (const directory of ['', 'getting-started/', 'installation/', 'api/', 'comparison/', 'benchmarks/']) {
+    await page.goto(`${base}${directory}index.html?from=bookmark#main`);
+    await expect(page).toHaveURL(`${base}${directory}?from=bookmark#main`);
+    await expect(page.locator('h1')).toBeVisible();
+  }
+  const searchIndex = await (await page.request.get(`${base}search.json`)).json();
+  assert.ok(searchIndex.every((entry: { href: string }) => !entry.href.includes('.html')), 'Search links use clean URLs');
   const llmResponse = await page.request.get(`${base}llms-full.txt`);
   assert.equal(llmResponse.status(), 200, 'LLM entry point is served under the GitHub Pages project path');
   assert.match(llmResponse.headers()['content-type'], /^text\/plain/);
@@ -59,8 +81,8 @@ try {
     if (url.origin === new URL(base).origin) assert.equal((await page.request.get(url.href)).status(), 200, `LLM reference resolves: ${match[1]}`);
   }
   for (const slug of ['index', 'getting-started', 'installation', 'api', 'comparison', 'benchmarks']) {
-    await page.goto(`${base}${slug}.html`);
-    await expect(page.locator('head link[rel="describedby"]')).toHaveAttribute('href', 'llms.txt');
+    await page.goto(`${base}${slug === 'index' ? '' : slug + '/'}`);
+    await expect(page.locator('head link[rel="describedby"]')).toHaveAttribute('href', slug === 'index' ? 'llms.txt' : '../llms.txt');
     for (const example of await page.locator('pre code').allTextContents()) {
       assert.ok(llmText.includes(example), `Self-contained guide preserves the ${slug} example verbatim`);
     }
@@ -69,7 +91,7 @@ try {
   for (const colorScheme of ['light', 'dark'] as const) {
     const context = await browser.newContext({ colorScheme, viewport: { width: 1440, height: 1000 } });
     const focusPage = await context.newPage();
-    await focusPage.goto(`${base}benchmarks.html`);
+    await focusPage.goto(`${base}benchmarks/`);
     const rows = focusPage.getByRole('combobox', { name: 'Data rows', exact: true });
     await rows.waitFor();
     await focusPage.keyboard.press('Tab');
@@ -109,7 +131,7 @@ try {
   }
   const forcedContext = await browser.newContext({ forcedColors: 'active', viewport: { width: 390, height: 844 } });
   const forcedPage = await forcedContext.newPage();
-  await forcedPage.goto(`${base}index.html`);
+  await forcedPage.goto(`${base}`);
   await forcedPage.keyboard.press('Control+k');
   assert.ok(await forcedPage.locator('.search-input-row').evaluate(el => {
     const style = getComputedStyle(el);
@@ -124,7 +146,7 @@ try {
     return pendingIndex;
   });
   try {
-    await page.goto(`${base}api.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${base}api/`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('button', { name: 'Switch to dark theme' })).toBeVisible();
     await page.keyboard.press('Meta+k');
     await expect(page.locator('#search-dialog')).toBeVisible({ timeout: 1000 });
@@ -142,7 +164,7 @@ try {
     await page.unroute('**/search.json');
   }
   await page.route('**/search.json', route => route.fulfill({ status: 503, body: 'Unavailable' }));
-  await page.goto(`${base}api.html`);
+  await page.goto(`${base}api/`);
   await page.keyboard.press('Control+k');
   await expect(page.locator('#search-dialog')).toBeVisible();
   await expect(page.locator('#search-results').getByText('Search is unavailable. Use the documentation navigation.', { exact: true })).toBeVisible();
@@ -155,7 +177,7 @@ try {
     const context = await browser.newContext({ colorScheme: systemTheme, viewport: { width, height: width === 390 ? 844 : 1000 } });
     const switching = await context.newPage();
     switching.on('pageerror', error => errors.push(error.message));
-    await switching.goto(`${base}index.html`);
+    await switching.goto(`${base}`);
     await switching.getByRole('button', { name: `Switch to ${savedTheme} theme` }).click();
     let releaseModule!: () => void;
     let pendingModule: Promise<void> | undefined;
@@ -165,7 +187,7 @@ try {
       return pendingModule;
     });
     try {
-      await switching.goto(`${base}getting-started.html`, { waitUntil: 'commit' });
+      await switching.goto(`${base}getting-started/`, { waitUntil: 'commit' });
       await expect(switching.getByRole('heading', { name: 'Getting started', exact: true })).toBeVisible();
       assert.equal(await switching.locator('html').getAttribute('data-theme'), savedTheme, 'Saved theme applies before the application module loads');
       const expectedBackground = savedTheme === 'dark' ? 'rgb(10, 10, 10)' : 'rgb(255, 255, 255)';
@@ -190,7 +212,7 @@ try {
     }
   }
   await page.setViewportSize({ width: 320, height: 740 });
-  await page.goto(`${base}getting-started.html`);
+  await page.goto(`${base}getting-started/`);
   assert.ok(await page.locator('h1').evaluate(el => parseFloat(getComputedStyle(el).fontSize) <= 34), 'Mobile documentation uses a compact page title');
   assert.ok(await page.locator('main p').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 16), 'Mobile body text is readable');
   const menuButton = page.getByRole('button', { name: 'Open navigation' });
@@ -200,10 +222,11 @@ try {
   assert.ok(await page.locator('.topbar').evaluate(el => el.scrollWidth <= el.clientWidth), 'Navbar fits at 320px');
   await page.setViewportSize({ width: 1280, height: 900 });
   for (const name of ['index', 'getting-started', 'installation', 'api', 'comparison', 'benchmarks']) {
-    await page.goto(`${base}${name}.html`);
+    await page.goto(`${base}${name === 'index' ? '' : name + '/'}`);
     assert.equal(await page.locator('h1').count(), 1, `${name} has a main heading`);
     for (const href of await page.locator('a[href]').evaluateAll(links => links.map(link => link.getAttribute('href')))) {
       if (!href || /^(https?:|mailto:)/.test(href)) continue;
+      assert.ok(!href.includes('.html'), `Navigation uses clean URLs: ${href}`);
       const url = new URL(href, page.url());
       const response = await page.request.get(url.href);
       assert.equal(response.status(), 200, `Local link resolves: ${url.href}`);
@@ -212,7 +235,7 @@ try {
       }
     }
   }
-  await page.goto(`${base}benchmarks.html`);
+  await page.goto(`${base}benchmarks/`);
   const chooseBenchmark = async (id: string, name: string, value: string) => {
     const text = await page.locator(`#${id} option[value="${value}"]`).textContent();
     await page.getByRole('combobox', { name, exact: true }).click();
@@ -258,7 +281,7 @@ try {
   const fallbackContext = await browser.newContext();
   await fallbackContext.addInitScript(() => { Object.defineProperty(HTMLElement.prototype, 'showPopover', { value: undefined }); });
   const fallback = await fallbackContext.newPage();
-  await fallback.goto(`${base}benchmarks.html`);
+  await fallback.goto(`${base}benchmarks/`);
   await expect(fallback.getByLabel('Runtime')).toBeVisible();
   await fallback.getByLabel('Runtime').selectOption('node');
   await expect(fallback.locator('#chart-caption')).toContainText('Node');
@@ -292,8 +315,8 @@ try {
   await page.getByRole('button', { name: 'Open documentation search' }).click();
   await page.getByLabel('Search documentation').fill('ReadLimits');
   await page.locator('#search-results a').first().click();
-  assert.ok(page.url().endsWith('api.html#read-limits'));
-  await page.goto(`${base}index.html`);
+  assert.ok(page.url().endsWith('api/#read-limits'));
+  await page.goto(`${base}`);
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.getByRole('button', { name: 'Copy code' }).first().click();
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'npm install minkexcel');
@@ -304,20 +327,20 @@ try {
   await expect(page.getByRole('button', { name: 'Open navigation' })).toHaveAttribute('aria-expanded', 'false');
   await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.locator('#mobile-navigation').getByRole('link', { name: 'API reference', exact: true }).click();
-  assert.ok(page.url().endsWith('api.html'));
+  assert.ok(page.url().endsWith('api/'));
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile page does not overflow');
   await mkdir('test-results', { recursive: true });
   await page.screenshot({ path: 'test-results/docs-api-mobile.png', fullPage: false });
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 844 });
     for (const name of ['index', 'getting-started', 'installation', 'api', 'comparison', 'benchmarks']) {
-      await page.goto(`${base}${name}.html`);
+      await page.goto(`${base}${name === 'index' ? '' : name + '/'}`);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name} fits at ${width}px`);
       if (name === 'api') assert.ok(await page.locator('#workbook td').first().isVisible(), 'API behavior is readable on narrow screens');
     }
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${base}getting-started.html`);
+  await page.goto(`${base}getting-started/`);
   await page.screenshot({ path: 'test-results/docs-mobile.png', fullPage: false });
   await page.locator('.mobile-toc summary').click();
   await page.locator('.mobile-toc').getByRole('link', { name: 'Import and read values', exact: true }).click();
@@ -331,18 +354,19 @@ try {
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
   await page.getByRole('button', { name: 'Switch to light theme' }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(`${base}benchmarks.html`);
+  await page.goto(`${base}benchmarks/`);
   await page.screenshot({ path: 'test-results/docs-benchmarks.png', fullPage: true });
-  await page.goto(`${base}index.html`);
+  await page.goto(`${base}`);
   await page.screenshot({ path: 'test-results/docs-home.png', fullPage: false });
-  await page.goto(`${base}getting-started.html`);
+  await page.goto(`${base}getting-started/`);
   await page.screenshot({ path: 'test-results/docs-desktop.png', fullPage: false });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${base}benchmarks.html`);
+  await page.goto(`${base}benchmarks/`);
   await page.locator('#timings').screenshot({ path: 'test-results/docs-chart-mobile.png' });
   assert.deepEqual(errors, []);
   const plain = await browser.newPage({ javaScriptEnabled: false });
   await plain.goto(`${base}benchmarks.html`);
+  await expect(plain).toHaveURL(`${base}benchmarks/`);
   assert.equal(await plain.locator('#timing-chart [data-value]').count(), 6, 'Chart is present without JavaScript');
   assert.equal(await plain.locator('#result-table tbody tr').count(), 9, 'Results are readable without JavaScript');
   await plain.setViewportSize({ width: 390, height: 844 });

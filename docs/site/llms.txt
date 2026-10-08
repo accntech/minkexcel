@@ -18,12 +18,12 @@ Important behavior:
 ## Documentation
 
 - [Complete self-contained guide](llms-full.txt): Installation, all examples, full public API and types, import limits, errors, ExcelJS comparison and complete recorded benchmark tables in one file. Read this when other documentation cannot be fetched.
-- [Introduction](index.html): Project motivation, design priorities and intended scope.
-- [Getting started](getting-started.html): Export and import examples, browser downloads, Node.js files, indexing conventions and formatting.
-- [Installation](installation.html): Package installation, ESM imports, runtime requirements and verified environments.
-- [API reference](api.html): Current public classes, functions, value and formatting types, import limits, errors and cancellation.
-- [ExcelJS comparison](comparison.html): Supported API mapping, migration examples and implementation differences.
-- [Benchmarks](benchmarks.html): Recorded timings, file sizes, methodology, limitations and reproduction commands.
+- [Introduction](./): Project motivation, design priorities and intended scope.
+- [Getting started](getting-started/): Export and import examples, browser downloads, Node.js files, indexing conventions and formatting.
+- [Installation](installation/): Package installation, ESM imports, runtime requirements and verified environments.
+- [API reference](api/): Current public classes, functions, value and formatting types, import limits, errors and cancellation.
+- [ExcelJS comparison](comparison/): Supported API mapping, migration examples and implementation differences.
+- [Benchmarks](benchmarks/): Recorded timings, file sizes, methodology, limitations and reproduction commands.
 
 ## Recorded benchmark data
 

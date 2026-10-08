@@ -15,8 +15,14 @@ const server = createServer(async (request, response) => {
       response.writeHead(302, { Location: '/minkexcel/' }); response.end(); return;
     }
     if (!pathname.startsWith('/minkexcel/')) { response.writeHead(404); response.end('Not found'); return; }
-    const path = resolve(root, pathname.slice('/minkexcel/'.length) || 'index.html');
+    let path = resolve(root, pathname.slice('/minkexcel/'.length) || 'index.html');
     if (!path.startsWith(root)) { response.writeHead(404); response.end('Not found'); return; }
+    if ((await stat(path)).isDirectory()) {
+      if (!pathname.endsWith('/')) {
+        response.writeHead(301, { Location: pathname + '/' + url.search }); response.end(); return;
+      }
+      path = resolve(path, 'index.html');
+    }
     const content = await readFile(path);
     const extension = extname(path);
     const cache = ['.woff2', '.png'].includes(extension) ? 'public, max-age=3600' : 'no-store';

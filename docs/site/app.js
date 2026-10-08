@@ -98,7 +98,7 @@ function renderSearch() {
     .sort((a, b) => Number(b.title.toLowerCase().includes(query)) - Number(a.title.toLowerCase().includes(query))).slice(0, 8);
   for (const item of matches) {
     const link = document.createElement('a');
-    link.href = item.href;
+    link.href = new URL(item.href, import.meta.url).href;
     link.textContent = item.title;
     link.addEventListener('click', () => searchDialog.close());
     results.append(link);

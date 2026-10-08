@@ -17,7 +17,15 @@ npm run docs:preview
 Open http://127.0.0.1:4173/minkexcel/. Set `DOCS_PORT` to use another port.
 Build output goes to `build/docs/`, which is ignored by Git. The preview serves
 the site at the same `/minkexcel/` path as a GitHub project site. Rebuild and
-refresh after editing. Serve over HTTP; interactive ES modules need an HTTP
+refresh after editing. Documentation pages use directory URLs such as
+`/minkexcel/getting-started/`, backed by `getting-started/index.html`. The home
+page uses `/minkexcel/`; explicit `index.html` URLs redirect to the containing
+directory when JavaScript is enabled. Navigation,
+search and agent references use these clean URLs. Previous `.html` page URLs
+redirect to their directory equivalents; JavaScript preserves query strings and
+section anchors, with a meta-refresh and link fallback when JavaScript is disabled.
+The preview also redirects directory requests without a trailing slash.
+Serve over HTTP; interactive ES modules need an HTTP
 origin rather than a `file://` URL.
 
 All page content and initial bar graphs are built into HTML. JavaScript adds
@@ -105,7 +113,8 @@ npm run test:docs
 ```
 
 The harness verifies all six pages and local links under the GitHub project path,
-both LLM entry-point filenames, their local references and HTML discovery links,
+clean directory URLs, legacy `.html` redirects, both LLM entry-point filenames,
+their local references and HTML discovery links,
 chart values against the recorded datasets, runtime/operation/row switching,
 search navigation, clipboard copying, mobile layout and navigation, no-JavaScript
 content, and browser errors. Screenshots go to `test-results/docs-*.png`.
