@@ -1,0 +1,79 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'benchmarks/matrix*.json'
+      - 'src/model.ts'
+      - 'assets/icon.png'
+      - 'package.json'
+      - 'tools/**'
+      - 'tests/docs.ts'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'benchmarks/matrix*.json'
+      - 'src/model.ts'
+      - 'assets/icon.png'
+      - 'package.json'
+      - 'tools/**'
+      - 'tests/docs.ts'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+      - name: Build static documentation
+        run: npm run docs:build
+      - name: Install browser verification tools
+        run: bun install --cwd tools --frozen-lockfile --ignore-scripts
+      - name: Install Chromium
+        run: bun tools/node_modules/@playwright/test/cli.js install --with-deps chromium
+      - name: Verify documentation
+        run: bun tests/docs.ts
+      - name: Upload GitHub Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/docs
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Publish documentation
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -16,6 +16,19 @@ Import is value-oriented: reading and rewriting an existing workbook does not
 preserve its styles, layout or unsupported features. Use it for data extraction
 and new reports when that scope fits your application.
 
+## Documentation site
+
+The static documentation site includes guides, the public API, an ExcelJS
+comparison and interactive graphs of the recorded benchmarks. To build and
+preview it locally:
+
+```sh
+npm run docs:build
+npm run docs:preview
+```
+
+See [the site guide](docs/README.md) for GitHub Pages publishing and editing.
+
 ## Installation and compatibility
 
 ```sh

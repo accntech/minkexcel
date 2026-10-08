@@ -164,6 +164,15 @@ local initialization that can safely be omitted when its result is unused.
 Record the bundler version and measurement date alongside size claims.
 This measures JavaScript, excluding TypeScript declarations and the icon.
 
+## Documentation site
+
+Run `npm run docs:build` to build the static site into `build/docs/`, then
+`npm run docs:preview` to serve it at `http://127.0.0.1:4173/minkexcel/`.
+No site build dependencies are required. After installing the optional tools
+and Chromium, run `npm run test:docs` for navigation, benchmark-data and browser
+checks. See [docs/README.md](docs/README.md) for content editing and the GitHub
+Pages workflow.
+
 ## Format references and publishing
 
 ZIP layout follows the

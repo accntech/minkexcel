@@ -1,0 +1,37 @@
+# MinkExcel
+
+> MinkExcel is a dependency-free JavaScript and TypeScript library for reading XLSX values and exporting formatted spreadsheet reports. It provides a focused subset of familiar ExcelJS workbook APIs for browsers, module Web Workers, Bun and Node.js.
+
+Install with `npm install minkexcel`. The package is ESM-only and includes TypeScript declarations. Use named imports such as `Workbook`, `readWorkbook` and `writeWorkbook`. The application supplies and saves `Uint8Array` bytes; the library does not perform filesystem or network I/O.
+
+Important behavior:
+
+- Import extracts cell values and cached formula results. Reading and rewriting an existing workbook does not preserve its styles, layout or unsupported features.
+- Formulas are not calculated. Supply a cached result when creating formula cells.
+- Row and column positions are one-based. Arrays passed to `addRow` or assigned to `row.values` are zero-based; reading `row.values` returns a one-based sparse array. Cell addresses use uppercase letters, such as `A1`.
+- Export supports fonts, solid fills, alignment, number formats, merges, frozen rows and print settings. It requires `CompressionStream("deflate")` and Web Streams. Import uses the library's own inflater.
+- Import validates ZIP checksums and applies configurable resource limits. See `ReadLimits`, `XlsxError`, `XlsxLimitError` and cancellation in the API reference.
+- MinkExcel is a supported subset of ExcelJS, not a drop-in replacement for its entire API. Review the implementation comparison before migrating.
+- Benchmark results describe recorded local workloads. They do not establish universal speed, browser performance, streaming performance or peak memory use.
+
+## Documentation
+
+- [Complete self-contained guide](llms-full.txt): Installation, all examples, full public API and types, import limits, errors, ExcelJS comparison and complete recorded benchmark tables in one file. Read this when other documentation cannot be fetched.
+- [Introduction](index.html): Project motivation, design priorities and intended scope.
+- [Getting started](getting-started.html): Export and import examples, browser downloads, Node.js files, indexing conventions and formatting.
+- [Installation](installation.html): Package installation, ESM imports, runtime requirements and verified environments.
+- [API reference](api.html): Current public classes, functions, value and formatting types, import limits, errors and cancellation.
+- [ExcelJS comparison](comparison.html): Supported API mapping, migration examples and implementation differences.
+- [Benchmarks](benchmarks.html): Recorded timings, file sizes, methodology, limitations and reproduction commands.
+
+## Recorded benchmark data
+
+- [Bun measurements](data/matrix.json): Recorded workloads, timings, raw samples, file sizes and runtime metadata.
+- [Node.js measurements](data/matrix-node.json): The corresponding recorded Node.js dataset.
+
+## Optional
+
+- [Repository README](https://raw.githubusercontent.com/accntech/minkexcel/main/README.md): Package overview, examples and compatibility information in Markdown.
+- [Public exports](https://raw.githubusercontent.com/accntech/minkexcel/main/src/index.ts): Authoritative package entry point.
+- [Workbook model](https://raw.githubusercontent.com/accntech/minkexcel/main/src/model.ts): Model classes and public formatting/value types.
+- [Contributor guide](https://raw.githubusercontent.com/accntech/minkexcel/main/CONTRIBUTING.md): Build, testing and benchmark reproduction instructions.

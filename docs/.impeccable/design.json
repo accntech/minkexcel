@@ -1,0 +1,823 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T13:03:19.426Z",
+  "title": "Design System: MinkExcel documentation",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Bg",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#fafafa",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "Subtle",
+        "canonical": "#f3f3f3",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#171717",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#666666",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#e8e8e8",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "green": {
+        "role": "primary",
+        "displayName": "Green",
+        "canonical": "#217346",
+        "tonalRamp": [
+          "oklch(15.0% 0.10627 154.93)",
+          "oklch(26.43% 0.10627 154.93)",
+          "oklch(37.86% 0.10627 154.93)",
+          "oklch(49.29% 0.10627 154.93)",
+          "oklch(60.71% 0.10627 154.93)",
+          "oklch(72.14% 0.10627 154.93)",
+          "oklch(83.57% 0.10627 154.93)",
+          "oklch(95.0% 0.10627 154.93)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "canonical": "#edf6f0",
+        "tonalRamp": [
+          "oklch(15.0% 0.01238 157.00)",
+          "oklch(26.43% 0.01238 157.00)",
+          "oklch(37.86% 0.01238 157.00)",
+          "oklch(49.29% 0.01238 157.00)",
+          "oklch(60.71% 0.01238 157.00)",
+          "oklch(72.14% 0.01238 157.00)",
+          "oklch(83.57% 0.01238 157.00)",
+          "oklch(95.0% 0.01238 157.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "excel": {
+        "role": "supporting",
+        "displayName": "Excel",
+        "canonical": "#7b8da5",
+        "tonalRamp": [
+          "oklch(15.0% 0.04174 255.67)",
+          "oklch(26.43% 0.04174 255.67)",
+          "oklch(37.86% 0.04174 255.67)",
+          "oklch(49.29% 0.04174 255.67)",
+          "oklch(60.71% 0.04174 255.67)",
+          "oklch(72.14% 0.04174 255.67)",
+          "oklch(83.57% 0.04174 255.67)",
+          "oklch(95.0% 0.04174 255.67)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "string": {
+        "role": "supporting",
+        "displayName": "String",
+        "canonical": "#216e46",
+        "tonalRamp": [
+          "oklch(15.0% 0.09889 156.48)",
+          "oklch(26.43% 0.09889 156.48)",
+          "oklch(37.86% 0.09889 156.48)",
+          "oklch(49.29% 0.09889 156.48)",
+          "oklch(60.71% 0.09889 156.48)",
+          "oklch(72.14% 0.09889 156.48)",
+          "oklch(83.57% 0.09889 156.48)",
+          "oklch(95.0% 0.09889 156.48)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "keyword": {
+        "role": "supporting",
+        "displayName": "Keyword",
+        "canonical": "#7935a3",
+        "tonalRamp": [
+          "oklch(15.0% 0.17382 309.72)",
+          "oklch(26.43% 0.17382 309.72)",
+          "oklch(37.86% 0.17382 309.72)",
+          "oklch(49.29% 0.17382 309.72)",
+          "oklch(60.71% 0.17382 309.72)",
+          "oklch(72.14% 0.17382 309.72)",
+          "oklch(83.57% 0.17382 309.72)",
+          "oklch(95.0% 0.17382 309.72)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "number": {
+        "role": "supporting",
+        "displayName": "Number",
+        "canonical": "#975116",
+        "tonalRamp": [
+          "oklch(15.0% 0.11542 54.99)",
+          "oklch(26.43% 0.11542 54.99)",
+          "oklch(37.86% 0.11542 54.99)",
+          "oklch(49.29% 0.11542 54.99)",
+          "oklch(60.71% 0.11542 54.99)",
+          "oklch(72.14% 0.11542 54.99)",
+          "oklch(83.57% 0.11542 54.99)",
+          "oklch(95.0% 0.11542 54.99)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus",
+        "canonical": "#217346",
+        "tonalRamp": [
+          "oklch(15.0% 0.10627 154.93)",
+          "oklch(26.43% 0.10627 154.93)",
+          "oklch(37.86% 0.10627 154.93)",
+          "oklch(49.29% 0.10627 154.93)",
+          "oklch(60.71% 0.10627 154.93)",
+          "oklch(72.14% 0.10627 154.93)",
+          "oklch(83.57% 0.10627 154.93)",
+          "oklch(95.0% 0.10627 154.93)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-bg": {
+        "role": "neutral",
+        "displayName": "Dark Bg",
+        "canonical": "#0a0a0a",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "Dark Surface",
+        "canonical": "#111111",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-subtle": {
+        "role": "neutral",
+        "displayName": "Dark Subtle",
+        "canonical": "#1a1a1a",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-ink": {
+        "role": "neutral",
+        "displayName": "Dark Ink",
+        "canonical": "#ededed",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Dark Muted",
+        "canonical": "#a1a1a1",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-line": {
+        "role": "neutral",
+        "displayName": "Dark Line",
+        "canonical": "#282828",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-green": {
+        "role": "primary",
+        "displayName": "Dark Green",
+        "canonical": "#75c899",
+        "tonalRamp": [
+          "oklch(15.0% 0.10659 157.80)",
+          "oklch(26.43% 0.10659 157.80)",
+          "oklch(37.86% 0.10659 157.80)",
+          "oklch(49.29% 0.10659 157.80)",
+          "oklch(60.71% 0.10659 157.80)",
+          "oklch(72.14% 0.10659 157.80)",
+          "oklch(83.57% 0.10659 157.80)",
+          "oklch(95.0% 0.10659 157.80)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-accent": {
+        "role": "primary",
+        "displayName": "Dark Accent",
+        "canonical": "#14291c",
+        "tonalRamp": [
+          "oklch(15.0% 0.03676 155.62)",
+          "oklch(26.43% 0.03676 155.62)",
+          "oklch(37.86% 0.03676 155.62)",
+          "oklch(49.29% 0.03676 155.62)",
+          "oklch(60.71% 0.03676 155.62)",
+          "oklch(72.14% 0.03676 155.62)",
+          "oklch(83.57% 0.03676 155.62)",
+          "oklch(95.0% 0.03676 155.62)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-excel": {
+        "role": "supporting",
+        "displayName": "Dark Excel",
+        "canonical": "#91a6c4",
+        "tonalRamp": [
+          "oklch(15.0% 0.04983 257.27)",
+          "oklch(26.43% 0.04983 257.27)",
+          "oklch(37.86% 0.04983 257.27)",
+          "oklch(49.29% 0.04983 257.27)",
+          "oklch(60.71% 0.04983 257.27)",
+          "oklch(72.14% 0.04983 257.27)",
+          "oklch(83.57% 0.04983 257.27)",
+          "oklch(95.0% 0.04983 257.27)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-string": {
+        "role": "supporting",
+        "displayName": "Dark String",
+        "canonical": "#8ad8a6",
+        "tonalRamp": [
+          "oklch(15.0% 0.10503 155.22)",
+          "oklch(26.43% 0.10503 155.22)",
+          "oklch(37.86% 0.10503 155.22)",
+          "oklch(49.29% 0.10503 155.22)",
+          "oklch(60.71% 0.10503 155.22)",
+          "oklch(72.14% 0.10503 155.22)",
+          "oklch(83.57% 0.10503 155.22)",
+          "oklch(95.0% 0.10503 155.22)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-keyword": {
+        "role": "supporting",
+        "displayName": "Dark Keyword",
+        "canonical": "#cf9fff",
+        "tonalRamp": [
+          "oklch(15.0% 0.14131 306.38)",
+          "oklch(26.43% 0.14131 306.38)",
+          "oklch(37.86% 0.14131 306.38)",
+          "oklch(49.29% 0.14131 306.38)",
+          "oklch(60.71% 0.14131 306.38)",
+          "oklch(72.14% 0.14131 306.38)",
+          "oklch(83.57% 0.14131 306.38)",
+          "oklch(95.0% 0.14131 306.38)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-number": {
+        "role": "supporting",
+        "displayName": "Dark Number",
+        "canonical": "#f0b17d",
+        "tonalRamp": [
+          "oklch(15.0% 0.10001 60.25)",
+          "oklch(26.43% 0.10001 60.25)",
+          "oklch(37.86% 0.10001 60.25)",
+          "oklch(49.29% 0.10001 60.25)",
+          "oklch(60.71% 0.10001 60.25)",
+          "oklch(72.14% 0.10001 60.25)",
+          "oklch(83.57% 0.10001 60.25)",
+          "oklch(95.0% 0.10001 60.25)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dark-focus": {
+        "role": "primary",
+        "displayName": "Dark Focus",
+        "canonical": "#75c899",
+        "tonalRamp": [
+          "oklch(15.0% 0.10659 157.80)",
+          "oklch(26.43% 0.10659 157.80)",
+          "oklch(37.86% 0.10659 157.80)",
+          "oklch(49.29% 0.10659 157.80)",
+          "oklch(60.71% 0.10659 157.80)",
+          "oklch(72.14% 0.10659 157.80)",
+          "oklch(83.57% 0.10659 157.80)",
+          "oklch(95.0% 0.10659 157.80)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dialog-backdrop": {
+        "role": "neutral",
+        "displayName": "Dialog Backdrop",
+        "canonical": "#00000099",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      },
+      "dialog-shadow": {
+        "role": "neutral",
+        "displayName": "Dialog Shadow",
+        "canonical": "#00000024",
+        "tonalRamp": [
+          "oklch(15.0% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.0% 0.00000 0.00)"
+        ],
+        "tonalRampSource": "Synthesized OKLCH preview only; not used in styles.css. Alpha is excluded from backdrop/shadow previews."
+      }
+    },
+    "typographyMeta": {
+      "page-title-mobile": {
+        "displayName": "Page Title Mobile",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "page-title-desktop": {
+        "displayName": "Page Title Desktop",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "section-title": {
+        "displayName": "Section Title",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "subsection-title": {
+        "displayName": "Subsection Title",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "body-compact": {
+        "displayName": "Body Compact",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "control-label": {
+        "displayName": "Control Label",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "navigation-desktop": {
+        "displayName": "Navigation Desktop",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "navigation-group": {
+        "displayName": "Navigation Group",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "small-label": {
+        "displayName": "Small Label",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "micro-label": {
+        "displayName": "Micro Label",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "code-mobile": {
+        "displayName": "Code Mobile",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "code-desktop": {
+        "displayName": "Code Desktop",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "code-inline": {
+        "displayName": "Code Inline",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "chart-value": {
+        "displayName": "Chart Value",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "chart-unit-mobile": {
+        "displayName": "Chart Unit Mobile",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "chart-unit-wide": {
+        "displayName": "Chart Unit Wide",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "benchmark-summary": {
+        "displayName": "Benchmark Summary",
+        "purpose": "Extracted from the corresponding implemented typography role in styles.css."
+      },
+      "benchmark-selector-mobile": {
+        "displayName": "Benchmark Selector Mobile",
+        "purpose": "Benchmark trigger and option text, extracted from the implemented responsive styles in styles.css."
+      },
+      "benchmark-selector-desktop": {
+        "displayName": "Benchmark Selector Desktop",
+        "purpose": "Benchmark trigger and option text, extracted from the implemented responsive styles in styles.css."
+      },
+      "numeric": {
+        "displayName": "Numeric Text",
+        "purpose": "Visible numeric literals in prose, tables, versions, chart titles/captions, results and enhanced selector labels. Inherit surrounding size, weight, line height and tracking; use tabular numerals. Axis ticks and the numeric-only native data-row selector also use mono.",
+        "fontVariantNumeric": "tabular-nums"
+      }
+    },
+    "shadows": [
+      {
+        "name": "search-dialog",
+        "value": "0 16px 48px #00000024",
+        "purpose": "Search modal elevation."
+      },
+      {
+        "name": "search-focus",
+        "value": "inset 0 -2px var(--focus)",
+        "purpose": "Focused search input row underline."
+      },
+      {
+        "name": "benchmark-selector-popup",
+        "value": "0 4px 12px #00000026",
+        "purpose": "Open benchmark option panel elevation."
+      }
+    ],
+    "effects": [
+      {
+        "name": "dialog-backdrop-blur",
+        "value": "blur(6px)",
+        "cssProperties": [
+          "backdrop-filter",
+          "-webkit-backdrop-filter"
+        ],
+        "purpose": "Shared search dialog and navigation sheet backdrop blur in both themes; foreground panels remain crisp."
+      }
+    ],
+    "motion": [
+      {
+        "name": "search-enter-duration",
+        "value": ".14s",
+        "purpose": "Search dialog and backdrop opacity entry; native display/overlay use the same duration, only with prefers-reduced-motion: no-preference."
+      },
+      {
+        "name": "search-exit-duration",
+        "value": ".1s",
+        "purpose": "Search dialog and backdrop opacity exit with native display/overlay retention, only with prefers-reduced-motion: no-preference."
+      },
+      {
+        "name": "search-easing",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Opacity-only search fades with fixed geometry, content, and shadow; starting-style provides transparent entry. Closed pointer events are disabled; reduced-motion opening and closing are immediate."
+      },
+      {
+        "name": "drawer-enter-duration",
+        "value": ".18s",
+        "purpose": "Native drawer entry, only with prefers-reduced-motion: no-preference."
+      },
+      {
+        "name": "drawer-enter-easing",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Drawer translation from -20px to 0."
+      },
+      {
+        "name": "scroll-behavior",
+        "value": "smooth",
+        "purpose": "Anchor scrolling, only with prefers-reduced-motion: no-preference."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "expanded-content",
+        "value": "540px"
+      },
+      {
+        "name": "persistent-sidebar",
+        "value": "900px"
+      },
+      {
+        "name": "right-section-list",
+        "value": "1280px"
+      }
+    ],
+    "themeMapping": {
+      "bg": {
+        "light": "bg",
+        "dark": "dark-bg",
+        "cssCustomProperty": "--bg"
+      },
+      "surface": {
+        "light": "surface",
+        "dark": "dark-surface",
+        "cssCustomProperty": "--surface"
+      },
+      "subtle": {
+        "light": "subtle",
+        "dark": "dark-subtle",
+        "cssCustomProperty": "--subtle"
+      },
+      "ink": {
+        "light": "ink",
+        "dark": "dark-ink",
+        "cssCustomProperty": "--ink"
+      },
+      "muted": {
+        "light": "muted",
+        "dark": "dark-muted",
+        "cssCustomProperty": "--muted"
+      },
+      "line": {
+        "light": "line",
+        "dark": "dark-line",
+        "cssCustomProperty": "--line"
+      },
+      "green": {
+        "light": "green",
+        "dark": "dark-green",
+        "cssCustomProperty": "--green"
+      },
+      "accent": {
+        "light": "accent",
+        "dark": "dark-accent",
+        "cssCustomProperty": "--accent"
+      },
+      "excel": {
+        "light": "excel",
+        "dark": "dark-excel",
+        "cssCustomProperty": "--excel"
+      },
+      "string": {
+        "light": "string",
+        "dark": "dark-string",
+        "cssCustomProperty": "--string"
+      },
+      "keyword": {
+        "light": "keyword",
+        "dark": "dark-keyword",
+        "cssCustomProperty": "--keyword"
+      },
+      "number": {
+        "light": "number",
+        "dark": "dark-number",
+        "cssCustomProperty": "--number"
+      },
+      "focus": {
+        "light": "focus",
+        "dark": "dark-focus",
+        "cssCustomProperty": "--focus"
+      }
+    },
+    "focus": {
+      "outline": "2px solid var(--focus)",
+      "outlineOffset": "4px",
+      "selectorOutlineOffset": "2px",
+      "copyOutlineOffset": "2px",
+      "scrollRegionOutlineOffset": "-2px",
+      "searchResultOutlineOffset": "-2px",
+      "searchFieldForcedColorsOutline": "2px solid Highlight",
+      "searchFieldForcedColorsOutlineOffset": "-2px"
+    },
+    "previewContract": "CSS custom properties inherit from the host. All markup is native HTML with inline Solar Linear SVGs. Previews show actual states and responsive styles; application actions require app.js in the site."
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The implemented getting-started link. Compact reversed neutral fill with a Solar arrow.",
+      "html": "<a class=\"ds-button ds-primary\" href=\"getting-started.html\">Getting started <svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M4 12H20M14 18L20 12L14 6\"/></svg></a>",
+      "css": ".ds-button{font-family:Geist,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:10px;border:1px solid transparent;border-radius:6px;min-height:44px;padding:0 16px;font-size:14px;font-weight:500;text-decoration:none}.ds-primary{background:var(--ink);color:var(--bg)}.ds-primary:hover{opacity:.85;text-decoration:none}.ds-button:focus-visible{outline:2px solid var(--focus);outline-offset:4px;}.ds-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;vertical-align:middle;}"
+    },
+    {
+      "name": "Navbar actions",
+      "kind": "nav",
+      "refersTo": "navbar-icon",
+      "description": "Search, GitHub, theme, and mobile menu actions share the user-requested desktop density across viewports: 32px controls, 16px icons, and 6px gaps. The icon-only menu occupies the last navbar slot below 900px, without a separate menu row. Mobile search is icon-only and GitHub stays in the navigation drawer; desktop search expands with its label and shortcut. Preview actions are visual only. Standalone dialog close actions retain their 44px transparent treatment.",
+      "html": "<div class=\"ds-top-actions\"><button class=\"ds-search-trigger\" type=\"button\" aria-label=\"Open documentation search\" aria-haspopup=\"dialog\"><svg class=\"ds-icon \" data-solar=\"magnifier-linear\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><circle cx=\"11.5\" cy=\"11.5\" r=\"9.5\"/><path d=\"M18.2173 18.2178L21.9999 22.0004\"/></g></svg><span>Search documentation…</span><kbd aria-hidden=\"true\"><span>Ctrl</span><span>K</span></kbd></button><a class=\"ds-github-link\" href=\"https://github.com/accntech/minkexcel\" aria-label=\"GitHub repository\" title=\"GitHub repository\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"ds-icon github-mark\" width=\"20\" height=\"20\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 24 24\"><path d=\"M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943\"/></svg></a><button class=\"ds-navbar-icon\" type=\"button\" aria-label=\"Switch to dark theme\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z\"/></svg></button><button class=\"ds-navbar-icon ds-menu-toggle\" type=\"button\" aria-label=\"Open navigation\"><svg class=\"ds-icon \" data-solar=\"hamburger-menu-linear\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M20 7L4 7\"/><path d=\"M20 12L4 12\"/><path d=\"M20 17L4 17\"/></g></svg></button></div>",
+      "css": ".ds-top-actions{display:flex;align-items:center;gap:6px;font-family:Geist,sans-serif}.ds-navbar-icon,.ds-search-trigger,.ds-github-link{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--muted);padding:0;font-family:inherit;font-size:12px;line-height:1;cursor:pointer;text-decoration:none}.ds-top-actions .ds-icon{display:inline-block;width:16px;height:16px;flex:0 0 16px;vertical-align:middle}.ds-navbar-icon:hover,.ds-search-trigger:hover,.ds-github-link:hover{color:var(--ink);background:var(--subtle);text-decoration:none}.ds-navbar-icon:focus-visible,.ds-search-trigger:focus-visible,.ds-github-link:focus-visible{outline:2px solid var(--focus);outline-offset:4px}.ds-github-link,.ds-search-trigger>span,.ds-search-trigger>kbd{display:none}@media(min-width:900px){.ds-menu-toggle{display:none}.ds-github-link{display:inline-flex;color:var(--ink)}.ds-search-trigger{justify-content:flex-start;width:clamp(208px,20vw,240px);padding:0 10px;gap:6px;background:var(--surface)}.ds-search-trigger>span{display:block;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-search-trigger>kbd{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;gap:3px;min-height:20px;margin-left:auto;padding:0 4px;border:1px solid var(--line);border-radius:4px;background:var(--bg);font-family:\"Geist Mono\",monospace;font-size:10px;color:var(--muted)}}"
+    },
+    {
+      "name": "Search input row",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Actual search field and focus underline, with native cancel decoration hidden for the Solar close action. Application shortcuts open before index loading completes; Escape closes even with a typed query.",
+      "html": "<div class=\"ds-search-input-row\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><circle cx=\"11.5\" cy=\"11.5\" r=\"9.5\"/><path d=\"M18.2173 18.2178L21.9999 22.0004\"/></g></svg><input type=\"search\" aria-label=\"Search documentation\" placeholder=\"Search documentation…\" autocomplete=\"off\"><button class=\"ds-icon-button\" type=\"button\" aria-label=\"Close search\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z\"/><path d=\"M14.5 9.50002L9.5 14.5M9.49998 9.5L14.5 14.5\"/></g></svg></button></div>",
+      "css": ".ds-search-input-row{font-family:Geist,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);display:flex;align-items:center;gap:10px;padding:8px 12px 8px 16px;border-bottom:1px solid var(--line);background:var(--bg)}.ds-search-input-row>.ds-icon{color:var(--muted)}.ds-search-input-row input{font:inherit;min-width:0;width:100%;padding:10px 0;border:0;color:var(--ink);background:none;caret-color:var(--green);font-size:16px}.ds-search-input-row input::placeholder{color:var(--muted);opacity:1}.ds-search-input-row input::-webkit-search-cancel-button{display:none}.ds-search-input-row input:focus{outline:0}.ds-search-input-row:has(input:focus){box-shadow:inset 0 -2px var(--focus)}.ds-icon-button{font:inherit;border:0;color:var(--muted);background:transparent;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0;padding:0;border-radius:6px;cursor:pointer}.ds-icon-button:hover{background:var(--subtle);color:var(--ink)}.ds-icon-button:focus-visible{outline:2px solid var(--focus);outline-offset:4px;}.ds-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;vertical-align:middle;}.ds-search-input-row{border-radius:11px 11px 0 0}@media(forced-colors:active){.ds-search-input-row:has(input:focus){outline:2px solid Highlight;outline-offset:-2px}}"
+    },
+    {
+      "name": "Grouped documentation navigation",
+      "kind": "nav",
+      "refersTo": "navigation-link",
+      "description": "Mobile drawer links and nested API navigation; desktop density is included at the source breakpoint. The desktop sidebar begins with a static Documentation label and inline muted version.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Documentation\"><div class=\"ds-sidebar-heading\"><span>Documentation</span><span class=\"ds-sidebar-version\">v0.1.0</span></div><div class=\"ds-nav-group\"><p>Guides</p><a href=\"getting-started.html\" aria-current=\"page\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M3 10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H13C16.7712 2 18.6569 2 19.8284 3.17157C21 4.34315 21 6.22876 21 10V14C21 17.7712 21 19.6569 19.8284 20.8284C18.6569 22 16.7712 22 13 22H11C7.22876 22 5.34315 22 4.17157 20.8284C3 19.6569 3 17.7712 3 14V10Z\"/><path d=\"M8 12H16\"/><path d=\"M8 8H16\"/><path d=\"M8 16H13\"/></g></svg><span>Getting started</span></a><a href=\"installation.html\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M17 9.00195C19.175 9.01406 20.3529 9.11051 21.1213 9.8789C22 10.7576 22 12.1718 22 15.0002V16.0002C22 18.8286 22 20.2429 21.1213 21.1215C20.2426 22.0002 18.8284 22.0002 16 22.0002H8C5.17157 22.0002 3.75736 22.0002 2.87868 21.1215C2 20.2429 2 18.8286 2 16.0002L2 15.0002C2 12.1718 2 10.7576 2.87868 9.87889C3.64706 9.11051 4.82497 9.01406 7 9.00195\"/><path stroke-linejoin=\"round\" d=\"M12 2L12 15M15 11.5L12 15L9 11.5\"/></g></svg><span>Installation</span></a></div><div class=\"ds-nav-group\"><p>Reference</p><a href=\"api.html\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M15.5 9L15.6716 9.17157C17.0049 10.5049 17.6716 11.1716 17.6716 12C17.6716 12.8284 17.0049 13.4951 15.6716 14.8284L15.5 15\"/><path d=\"M13.2939 7.17041L11.9998 12L10.7058 16.8297\"/><path d=\"M8.50019 9L8.32861 9.17157C6.99528 10.5049 6.32861 11.1716 6.32861 12C6.32861 12.8284 6.99528 13.4951 8.32861 14.8284L8.50019 15\"/><path d=\"M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z\"/></g></svg><span>API reference</span></a><div class=\"ds-api-nav\"><a href=\"api.html#workbook\">Workbook</a><a href=\"api.html#worksheet\">Worksheet</a></div></div></nav>",
+      "css": ".ds-nav{font-family:Geist,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);}.ds-sidebar-heading{display:none}.ds-nav-group{margin-bottom:26px}.ds-nav-group>p{margin:0 0 8px;font-size:13px;font-weight:500}.ds-nav-group>a{display:flex;align-items:center;gap:10px;padding:8px 0;min-height:44px;font-size:14px;color:var(--muted);text-decoration:none}.ds-nav-group>a .ds-icon{width:18px;height:18px;flex-basis:18px}.ds-nav-group>a:hover{color:var(--ink);text-decoration:none}.ds-nav-group>a[aria-current=\"page\"]{color:var(--green);font-weight:500}.ds-api-nav{margin:4px 0 12px 8px;border-left:1px solid var(--line);padding-left:20px}.ds-api-nav a{display:block;padding:10px 0;min-height:44px;font-size:13px;color:var(--muted);text-decoration:none}.ds-api-nav a:hover{text-decoration:underline;text-underline-offset:4px}.ds-api-nav a.ds-active{color:var(--green)}.ds-nav a:focus-visible{outline:2px solid var(--focus);outline-offset:4px;}@media(min-width:900px){.ds-sidebar-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px;margin:0 0 28px;font-size:13px;font-weight:500}.ds-sidebar-version{color:var(--muted);font-family:\"Geist Mono\",monospace;font-size:11px;font-weight:400}.ds-nav-group{margin-bottom:22px}.ds-nav-group>a{min-height:36px;padding:5px 0;font-size:13px}.ds-api-nav a{min-height:32px;padding:5px 0;font-size:12px}}.ds-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;vertical-align:middle;}"
+    },
+    {
+      "name": "Code panel",
+      "kind": "card",
+      "refersTo": "code-panel",
+      "description": "Syntax-highlighted code with a compact copy control, a preserved coarse-pointer touch target, and contained horizontal overflow. Preview copy action is visual only.",
+      "html": "<div class=\"ds-code-block\"><div class=\"ds-code-heading\"><span>TypeScript</span><button class=\"ds-copy\" type=\"button\" aria-label=\"Copy code\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M6 11C6 8.17157 6 6.75736 6.87868 5.87868C7.75736 5 9.17157 5 12 5H15C17.8284 5 19.2426 5 20.1213 5.87868C21 6.75736 21 8.17157 21 11V16C21 18.8284 21 20.2426 20.1213 21.1213C19.2426 22 17.8284 22 15 22H12C9.17157 22 7.75736 22 6.87868 21.1213C6 20.2426 6 18.8284 6 16V11Z\"/><path d=\"M6 19C4.34315 19 3 17.6569 3 16V10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H15C16.6569 2 18 3.34315 18 5\"/></g></svg><span>Copy</span></button></div><pre tabindex=\"0\" aria-label=\"TypeScript code\"><code><span class=\"ds-syntax-keyword\">import</span> { Workbook } <span class=\"ds-syntax-keyword\">from</span> <span class=\"ds-syntax-string\">\"minkexcel\"</span>;\n<span class=\"ds-syntax-keyword\">const</span> book = <span class=\"ds-syntax-keyword\">new</span> Workbook();</code></pre></div>",
+      "css": ".ds-code-block{font-family:Geist,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:24px 0;overflow:hidden}.ds-code-heading{display:flex;align-items:center;justify-content:space-between;min-height:44px;border-bottom:1px solid var(--line);padding:0 12px 0 16px;font-size:12px;color:var(--muted)}.ds-copy{font:inherit;position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:28px;min-width:44px;padding:0 8px;border:0;border-radius:6px;color:var(--muted);background:none;font-size:12px;cursor:pointer}.ds-copy .ds-icon{width:16px;height:16px;flex-basis:16px}.ds-copy:hover{color:var(--ink);background:var(--subtle)}@media(pointer:coarse){.ds-copy::after{content:'';position:absolute;inset:-8px 0}}.ds-code-block pre{margin:0;padding:18px 16px;max-width:100%;overflow-x:auto;font-size:12px;line-height:1.85;tab-size:2}.ds-code-block code{font-family:\"Geist Mono\",monospace;font-size:inherit}.ds-syntax-keyword{color:var(--keyword)}.ds-syntax-string{color:var(--string)}.ds-copy:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-code-block pre:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:0 0 9px 9px}@media(min-width:900px){.ds-code-heading{min-height:40px}.ds-code-block pre{font-size:13px;padding:20px}}.ds-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;vertical-align:middle;}"
+    },
+    {
+      "name": "Informational note",
+      "kind": "card",
+      "refersTo": "note",
+      "description": "The implemented flat note container, Solar document icon, compact text, and semantic inline link.",
+      "html": "<aside class=\"ds-note\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M3 10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H13C16.7712 2 18.6569 2 19.8284 3.17157C21 4.34315 21 6.22876 21 10V14C21 17.7712 21 19.6569 19.8284 20.8284C18.6569 22 16.7712 22 13 22H11C7.22876 22 5.34315 22 4.17157 20.8284C3 19.6569 3 17.7712 3 14V10Z\"/><path d=\"M8 12H16\"/><path d=\"M8 8H16\"/><path d=\"M8 16H13\"/></g></svg><div><strong>Import boundaries</strong><p>The default file limit is <span class=\"ds-numeric\">5</span> MiB. See <a href=\"api.html#read-limits\">ReadLimits</a> before accepting larger uploads.</p></div></aside>",
+      "css": ".ds-note{font-family:Geist,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);display:flex;align-items:flex-start;gap:12px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:18px 16px;margin:28px 0}.ds-note>.ds-icon{margin-top:2px;color:var(--muted)}.ds-note strong{font-size:14px;font-weight:500}.ds-note p{font-size:14px;margin:8px 0 0;line-height:1.8}.ds-note a{color:var(--green);text-decoration:none;text-underline-offset:4px}.ds-note a:hover{text-decoration:underline}.ds-note a:focus-visible{outline:2px solid var(--focus);outline-offset:4px;}.ds-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;vertical-align:middle;} .ds-numeric{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Benchmark bars",
+      "kind": "custom",
+      "refersTo": "chart-panel",
+      "description": "A representative workload from the recorded Bun 10,000-row export dataset, with the production zero-based scale and visible values.",
+      "html": "<div class=\"ds-chart-panel\"><div class=\"ds-chart-top\"><h3>Export · <span class=\"ds-numeric\">10,000</span> data rows</h3><div class=\"ds-legend\"><span class=\"ds-mink-key\">MinkExcel</span><span class=\"ds-excel-key\">ExcelJS</span></div></div><div class=\"ds-bar-chart\" role=\"img\" aria-label=\"Recorded Bun export time in milliseconds. Lower is better.\"><div class=\"ds-bar-group\"><p class=\"ds-workload-label\">Numeric</p><div class=\"ds-bar-row\"><span class=\"ds-bar-label\">MinkExcel</span><div class=\"ds-bar-track\"><div class=\"ds-bar-mink\" style=\"width:37.84522199999992%\"></div></div><span class=\"ds-chart-value\">56.8<small>ms</small></span></div><div class=\"ds-bar-row\"><span class=\"ds-bar-label\">ExcelJS</span><div class=\"ds-bar-track\"><div class=\"ds-bar-excel\" style=\"width:76.33636133333343%\"></div></div><span class=\"ds-chart-value\">114.5<small>ms</small></span></div></div><div class=\"ds-chart-scale\"><span></span><div><span>0</span><span>50</span><span>100</span><span>150</span></div><span></span></div><p class=\"ds-chart-axis\">Time (ms) · lower is better</p></div></div>",
+      "css": ".ds-chart-panel{font-family:Geist,sans-serif;font-size:16px;line-height:1.75;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:20px 14px;margin-top:24px}.ds-chart-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.ds-chart-top h3{margin:0;font-size:14px;font-weight:500}.ds-legend{display:flex;gap:16px;font-size:12px;color:var(--muted)}.ds-legend span::before{content:\"\";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px}.ds-mink-key::before,.ds-bar-mink{background:var(--green)}.ds-excel-key::before,.ds-bar-excel{background:var(--excel)}.ds-bar-chart{--series-width:62px;--value-width:60px}.ds-bar-group{margin-bottom:24px}.ds-workload-label{font-size:14px;font-weight:500;margin:0 0 12px}.ds-bar-row,.ds-chart-scale{display:grid;grid-template-columns:var(--series-width) minmax(0,1fr) var(--value-width);gap:8px;align-items:center}.ds-bar-row+.ds-bar-row{margin-top:10px}.ds-bar-label{font-size:12px;color:var(--muted)}.ds-bar-track{height:16px;background:var(--subtle);border-radius:3px}.ds-bar-mink,.ds-bar-excel{height:100%;border-radius:3px}.ds-chart-value{font-size:13px;font-family:\"Geist Mono\",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.ds-chart-value small{margin-left:3px;font-size:10px;color:var(--muted)}.ds-chart-scale>div{display:flex;justify-content:space-between;gap:2px;border-top:1px solid var(--line);padding-top:8px;color:var(--muted);font-size:10px;font-family:\"Geist Mono\",monospace;font-variant-numeric:tabular-nums}.ds-chart-axis{color:var(--muted);text-align:center;font-size:11px;margin:12px 0 0}@media(min-width:540px){.ds-chart-panel{padding:24px}.ds-bar-chart{--series-width:80px;--value-width:78px}.ds-bar-label,.ds-chart-value{font-size:13px}.ds-chart-value small{font-size:11px}.ds-bar-track{height:20px}.ds-chart-scale>div{font-size:12px}}@media(min-width:900px){.ds-bar-row,.ds-chart-scale{gap:12px}} .ds-numeric{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Benchmark selectors",
+      "kind": "input",
+      "refersTo": "benchmark-selector",
+      "description": "Styled benchmark triggers and an open Runtime option panel inspired by shadcn/ui Select. This static preview shows current labels, responsive dimensions, active fill and Solar selection check; production select.js provides keyboard interaction, native popover dismissal and native-select fallback.",
+      "html": "<div class=\"ds-chart-controls\"><div class=\"ds-select-group\"><span class=\"ds-select-label\">Runtime</span><button class=\"ds-select-trigger\" type=\"button\" aria-label=\"Runtime preview: Bun 1.4.0\"><span>Bun <span class=\"ds-numeric\">1.4.0</span></span><svg class=\"ds-select-icon\" data-solar=\"alt-arrow-down-linear\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M19 9L12 15L5 9\"/></svg></button><div class=\"ds-select-popup\" aria-label=\"Runtime option panel preview\"><div class=\"ds-select-option ds-is-active\"><span>Bun <span class=\"ds-numeric\">1.4.0</span></span><svg class=\"ds-select-icon\" data-solar=\"check-linear\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M5 13L9 17L19 7\"/></svg></div><div class=\"ds-select-option\"><span>Node <span class=\"ds-numeric\">24.12.0</span></span></div></div></div><div class=\"ds-select-group\"><span class=\"ds-select-label\">Operation</span><button class=\"ds-select-trigger\" type=\"button\" aria-label=\"Operation preview: Export\"><span>Export</span><svg class=\"ds-select-icon\" data-solar=\"alt-arrow-down-linear\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M19 9L12 15L5 9\"/></svg></button></div><div class=\"ds-select-group\"><span class=\"ds-select-label\">Data rows</span><button class=\"ds-select-trigger\" type=\"button\" aria-label=\"Data rows preview: 10,000\"><span><span class=\"ds-numeric\">10,000</span></span><svg class=\"ds-select-icon\" data-solar=\"alt-arrow-down-linear\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M19 9L12 15L5 9\"/></svg></button></div></div>",
+      "css": ".ds-chart-controls{font-family:Geist,sans-serif;font-weight:400;line-height:1.75;display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:12px;margin:24px 0}.ds-select-group{display:flex;flex-direction:column;gap:6px}.ds-select-label{font-size:12px;color:var(--muted)}.ds-select-trigger{box-sizing:border-box;font-family:inherit;font-weight:400;width:100%;min-height:44px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);padding:0 12px;font-size:14px;line-height:1.5;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}.ds-select-trigger:hover{background:var(--subtle)}.ds-select-trigger:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-select-icon{width:16px;height:16px;flex:0 0 16px;pointer-events:none}.ds-select-trigger>.ds-select-icon{color:var(--muted)}.ds-select-popup{padding:4px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);box-shadow:0 4px 12px #00000026}.ds-select-option{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:6px 8px;border-radius:3px;font-size:14px;line-height:1.5;cursor:default;user-select:none}.ds-select-option.ds-is-active,.ds-select-option:hover{background:var(--subtle)}@media(min-width:540px){.ds-chart-controls{grid-template-columns:repeat(3,minmax(0,160px))}}@media(min-width:900px){.ds-select-trigger{min-height:36px;padding:0 10px;font-size:13px}.ds-select-option{min-height:32px;font-size:13px}}@media(forced-colors:active){.ds-select-trigger:focus-visible{outline-color:Highlight}.ds-select-option.ds-is-active,.ds-select-option:hover{background:Highlight;color:HighlightText}} .ds-numeric{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Navbar brand",
+      "kind": "link",
+      "description": "Reference-inspired two-line brand: 36px green MinkExcel icon, 20px split-weight wordmark and muted 12px Documentation subtitle. Fits in the 64px navbar on phones and desktop.",
+      "html": "<a class=\"ds-brand\" href=\"index.html\"><img src=\"icon.png\" width=\"36\" height=\"36\" alt=\"\"><span class=\"ds-brand-copy\"><span class=\"ds-brand-name\"><strong>Mink</strong>Excel</span><span class=\"ds-brand-subtitle\">Documentation</span></span></a>",
+      "css": ".ds-brand{display:inline-flex;align-items:center;gap:10px;color:var(--ink);white-space:nowrap;text-decoration:none;font-family:Geist,sans-serif}.ds-brand img{border-radius:9px}.ds-brand-copy{display:flex;flex-direction:column;gap:3px}.ds-brand-name{font-size:20px;font-weight:400;letter-spacing:-.03em;line-height:1.15}.ds-brand-name strong{font-weight:650}.ds-brand-subtitle{color:var(--muted);font-size:12px;font-weight:400;line-height:1.25}.ds-brand:focus-visible{outline:2px solid var(--focus);outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Read mode",
+    "overview": "The implemented direction follows the user-approved Vercel Geist styling and Next.js documentation reference: quiet neutral surfaces, compact headings, precise navigation, and a clear reading column. The page title and technical content lead; the preserved MinkExcel logo provides the brand anchor.\n\nThe same documentation remains available across phone and desktop layouts. Color, borders, spacing, and authentic Solar Linear SVGs explain state and structure with little decoration. The light and dark themes share component geometry and typography.",
+    "keyCharacteristics": [
+      "Self-hosted Geist Sans and Geist Mono.",
+      "Neutral reading surfaces with green links, active documentation navigation, and MinkExcel chart bars.",
+      "Mobile-first layout with persistent navigation added as space permits.",
+      "Flat bordered panels, visible numeric chart values, and native disclosure/dialog behavior."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Color Rule",
+        "body": "Keep the green and slate chart series paired with visible names and numeric values; preserve each theme's semantic assignments.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reading Type Rule",
+        "body": "Preserve the compact title scale and the body size across viewports; use natural wrapping rather than forced title line breaks.",
+        "section": "typography"
+      },
+      {
+        "name": "The Numeric Type Rule",
+        "body": "Use Geist Mono with tabular numerals for visible numeric text and values. Keep surrounding words and units in their existing font; existing whole chart values retain their mono units. Preserve identifiers such as CRC32, M4, and A1, and leave code rendering intact.",
+        "section": "typography"
+      },
+      {
+        "name": "The Contained Overflow Rule",
+        "body": "Keep the document within the viewport; isolate wide code and comparison data in their own scrolling regions.",
+        "section": "layout"
+      },
+      {
+        "name": "The Compact Copy Rule",
+        "body": "Keep the copy button visually compact while preserving its full coarse-pointer touch target; the header follows the viewport breakpoint.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do preserve the approved Geist/Next.js direction and the MinkExcel logo.",
+      "Do use the theme's semantic colors, authentic Solar Linear utility SVGs, and the official GitHub brand mark for the repository link.",
+      "Do retain readable body copy, compact heading hierarchy, and mobile-first component structure.",
+      "Do keep chart values visible and wide code/tables contained within their regions.",
+      "Do preserve keyboard focus, native navigation fallbacks, static chart data, theme preferences, and reduced-motion behavior."
+    ],
+    "donts": [
+      "Don't add oversized marketing titles, forced title line breaks, or ornamental background grids to the documentation.",
+      "Don't replace the requested Solar utility icons with Unicode symbols or unrelated icon sets; keep the official GitHub brand mark as the repository-link exception.",
+      "Don't imply a global reading measure or spacing value that the CSS does not implement.",
+      "Don't apply synthesized sidecar tonal ramps as production tokens without an explicit design change."
+    ]
+  }
+}
