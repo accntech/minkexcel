@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "date": "2026-10-08T10:28:32.267Z",
+    "runtime": "Bun 1.4.0",
+    "exceljs": "4.4.0"
+  },
+  "rows": [
+    {
+      "check": "Preserve string \"_x0041_\" with both readers",
+      "minkexcel": "Preserved",
+      "exceljs": "Changed"
+    },
+    {
+      "check": "Preserve string \"_x005F_\" with both readers",
+      "minkexcel": "Preserved",
+      "exceljs": "Changed"
+    },
+    {
+      "check": "Preserve string \"first\\rsecond\" with both readers",
+      "minkexcel": "Preserved",
+      "exceljs": "Changed"
+    },
+    {
+      "check": "Preserve string \"  α & <Co> 🧾  \" with both readers",
+      "minkexcel": "Preserved",
+      "exceljs": "Preserved"
+    },
+    {
+      "check": "Reject mismatched worksheet CRC32 (both ZIP headers changed consistently)",
+      "minkexcel": "Rejected",
+      "exceljs": "Accepted"
+    },
+    {
+      "check": "Reject truncated ZIP archive",
+      "minkexcel": "Rejected",
+      "exceljs": "Rejected"
+    },
+    {
+      "check": "Reject reserved XML namespace rebinding",
+      "minkexcel": "Rejected",
+      "exceljs": "Accepted"
+    },
+    {
+      "check": "Reject worksheet DTD",
+      "minkexcel": "Rejected",
+      "exceljs": "Accepted"
+    }
+  ],
+  "strings": {
+    "input": [
+      "_x0041_",
+      "_x005F_",
+      "first\rsecond",
+      "  α & <Co> 🧾  "
+    ],
+    "ownWithOwn": [
+      "_x0041_",
+      "_x005F_",
+      "first\rsecond",
+      "  α & <Co> 🧾  "
+    ],
+    "ownWithExcel": [
+      "_x0041_",
+      "_x005F_",
+      "first\rsecond",
+      "  α & <Co> 🧾  "
+    ],
+    "foreignWithOwn": [
+      "A",
+      "_",
+      "first\nsecond",
+      "  α & <Co> 🧾  "
+    ],
+    "foreignWithExcel": [
+      "A",
+      "_",
+      "first\nsecond",
+      "  α & <Co> 🧾  "
+    ]
+  }
+}
