@@ -1,0 +1,9 @@
+{
+  "name": "minkexcel-tools",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "exceljs": "4.4.0"
+  }
+}

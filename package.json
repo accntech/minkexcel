@@ -1,0 +1,14 @@
+{
+  "name": "minkexcel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "bench": "bun benchmarks/exceljs.ts",
+    "test:browser": "bun tests/browser.ts"
+  }
+}
