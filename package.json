@@ -34,6 +34,8 @@
     "prepack": "npm run build",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
+    "test:coverage:json": "bun tools/instrumentation/run.ts",
+    "test:health": "bun run test:coverage:json && fallow src --no-cache --fail-on-issues",
     "bench": "bun benchmarks/exceljs.ts",
     "bench:matrix": "bun benchmarks/matrix.ts",
     "bench:node": "node benchmarks/matrix.ts",

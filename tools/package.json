@@ -5,6 +5,7 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "exceljs": "4.4.0",
+    "istanbul-lib-instrument": "6.0.3",
     "typescript": "5.9.3"
   }
 }

@@ -5,8 +5,8 @@ participating in the project. It describes community expectations and how to
 report concerns.
 
 The library manifest has no runtime, development or peer dependencies.
-TypeScript, Playwright and the ExcelJS benchmark reference are isolated in
-`tools/package.json`, with their own lockfile. Unit tests use Bun's built-in
+TypeScript, Playwright, Istanbul instrumentation and the ExcelJS benchmark
+reference are isolated in `tools/package.json`, with their own lockfile. Unit tests use Bun's built-in
 runner and Node's built-in compressor/inflater as independent DEFLATE references.
 
 ## Commit conventions
@@ -72,6 +72,35 @@ handling. Worksheet import cases exercise both the visitor-based path without
 a signal and the cancellable path with a signal. Independent ExcelJS fixtures,
 a stored ZIP fixture and Node's zlib help catch reader/writer defects that a
 roundtrip through MinkExcel alone could hide.
+
+## Source health checks
+
+With Fallow 3.30.0 available on your PATH, run:
+
+```sh
+bun run test:health
+```
+
+This runs the unit suite against instrumented temporary copies of `src/` and
+`tests/`, then checks `src/` for unused code, duplication and health findings.
+The original source files stay untouched. Istanbul records statement, function
+and branch hits against the original source paths in
+`build/coverage/coverage-final.json`. The report is generated from scratch;
+failing tests stop the health check.
+
+Create a local `fallow.toml` (ignored by Git) to supply this measured coverage
+to Fallow's CRAP calculation:
+
+```toml
+[health]
+coverage = "build/coverage/coverage-final.json"
+```
+
+The default complexity, cognitive complexity, function-size and CRAP thresholds
+remain unchanged. Run `bun run test:coverage:json` to refresh coverage before
+calling `fallow src` directly after source edits. Generated coverage stays out
+of Git and the published package. Fallow's historical churn and file-splitting
+recommendations are advisory, separate from threshold findings.
 
 ## Browser and Web Worker checks
 
