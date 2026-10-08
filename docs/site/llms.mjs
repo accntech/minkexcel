@@ -46,7 +46,7 @@ export function llmsFullGuide({ introduction, documents, version, exports, limit
   const split = introduction.indexOf('\n## Documentation');
   const overview = split < 0 ? introduction : introduction.slice(0, split);
   const references = split < 0 ? '' : introduction.slice(split);
-  const declarations = `## Public exports and import-limit type\n\nImport public names from \`minkexcel\`. This is the package entry point; the relative re-export paths below describe internal modules.\n\n\`\`\`ts\n${exports.trim()}\n\`\`\`\n\nThe expanded public import-limit type is:\n\n\`\`\`ts\nexport type ReadLimits = Partial<{\n${limitFields.map(field => `  ${field}: number;`).join('\n')}\n}>;\n\`\`\``;
+  const declarations = `## Public exports and import-limit type\n\nImport public names from \`minkexcel\`. This is the package entry point; the relative re-export paths below describe internal modules.\n\n\`\`\`ts\n${exports.trim()}\n\`\`\`\n\nThe expanded public import-limit type is:\n\n\`\`\`ts\nexport type ReadLimits = Partial<{\n${limitFields.map(field => `  ${field}: number;`).join('\n')}\n}>;\nexport type ReadOptions = ReadLimits & { preserveTemplate?: boolean };\n\`\`\``;
   const content = documents.map(page => {
     const body = page.slug === 'benchmarks' ? page.body
       .replace('Switch the runtime, operation or row count to compare the same three workloads. Every bar begins at zero. Lower is better.', 'Compare numeric, text and mixed workloads at each row count using the complete tables below. Lower processing time is better.')

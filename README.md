@@ -35,7 +35,7 @@ npm run docs:build
 npm run docs:preview
 ```
 
-See [the site guide](docs/README.md) for GitHub Pages publishing and editing.
+See [the site guide](docs/site/README.md) for GitHub Pages publishing and editing.
 
 ## Installation and compatibility
 
@@ -515,15 +515,13 @@ broader workbook support, and reliability still depends on the features and
 files your application uses. See the [reproducible checks](benchmarks/reliability.ts)
 and [recorded values](benchmarks/reliability.json).
 
-## Development and releases
+## Development
 
 All participants are expected to follow the
 [Code of Conduct](https://github.com/accntech/minkexcel/blob/main/CODE_OF_CONDUCT.md).
 
 See [CONTRIBUTING.md](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
-for build, test, browser harness and benchmark commands, and
-[RELEASING.md](https://github.com/accntech/minkexcel/blob/main/RELEASING.md)
-for npm publishing and GitHub release setup.
+for build, test, browser harness and benchmark commands.
 
 ## License
 

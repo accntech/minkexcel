@@ -7,21 +7,23 @@ import { timingChart, sizeChart, resultsTable } from './charts.mjs';
 import { numericMarkup, numericText } from './numbers.mjs';
 import { llmsFullGuide } from './llms.mjs';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
+const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = join(root, 'build/docs');
-const [manifest, bun, node, model, boot] = await Promise.all([
+const [manifest, bun, node, model, boot, templateBun, templateNode] = await Promise.all([
   readFile(join(root, 'package.json'), 'utf8').then(JSON.parse),
   readFile(join(root, 'benchmarks/matrix.json'), 'utf8').then(JSON.parse),
   readFile(join(root, 'benchmarks/matrix-node.json'), 'utf8').then(JSON.parse),
   readFile(join(root, 'src/model.ts'), 'utf8'),
-  readFile(join(root, 'docs/boot.js'), 'utf8'),
+  readFile(join(root, 'docs/site/boot.js'), 'utf8'),
+  readFile(join(root, 'benchmarks/template.json'), 'utf8').then(JSON.parse),
+  readFile(join(root, 'benchmarks/template-node.json'), 'utf8').then(JSON.parse),
 ]);
 const documents = pages({
-  version: manifest.version, bun, node, timingChart, sizeChart, resultsTable,
+  version: manifest.version, bun, node, templateBun, templateNode, timingChart, sizeChart, resultsTable,
   types: model.slice(0, model.indexOf('type Address')).replaceAll('export ', '').trim(),
 });
 const [introduction, publicExports, reader] = await Promise.all([
-  readFile(join(root, 'docs/llms.txt'), 'utf8'),
+  readFile(join(root, 'docs/site/llms.txt'), 'utf8'),
   readFile(join(root, 'src/index.ts'), 'utf8'),
   readFile(join(root, 'src/read.ts'), 'utf8'),
 ]);
@@ -29,22 +31,24 @@ const llmsFull = llmsFullGuide({
   introduction, version: manifest.version, exports: publicExports,
   limitFields: [...reader.match(/const defaultLimits: Limits = \{([\s\S]*?)\n\};/)[1].matchAll(/(\w+):/g)].map(match => match[1]),
   datasets: [bun, node],
-  documents: pages({ version: manifest.version, bun, node, types: model.slice(0, model.indexOf('type Address')).replaceAll('export ', '').trim(), timingChart: () => '', sizeChart: () => '', resultsTable: () => '' }),
+  documents: pages({ version: manifest.version, bun, node, templateBun, templateNode, types: model.slice(0, model.indexOf('type Address')).replaceAll('export ', '').trim(), timingChart: () => '', sizeChart: () => '', resultsTable: () => '' }),
 });
 await rm(output, { recursive: true, force: true });
 await mkdir(join(output, 'data'), { recursive: true });
 await Promise.all([
-  ...['styles.css', 'app.js', 'charts.mjs', 'select.js', 'numbers.mjs'].map(name => copyFile(join(root, 'docs', name), join(output, name))),
+  ...['styles.css', 'app.js', 'charts.mjs', 'select.js', 'numbers.mjs'].map(name => copyFile(join(root, 'docs/site', name), join(output, name))),
   writeFile(join(output, 'llms.txt'), introduction),
   writeFile(join(output, 'llms-full.txt'), llmsFull),
-  cp(join(root, 'docs/assets'), join(output, 'assets'), { recursive: true }),
+  cp(join(root, 'docs/site/assets'), join(output, 'assets'), { recursive: true }),
   copyFile(join(root, 'assets/icon.png'), join(output, 'icon.png')),
   copyFile(join(root, 'benchmarks/matrix.json'), join(output, 'data/matrix.json')),
   copyFile(join(root, 'benchmarks/matrix-node.json'), join(output, 'data/matrix-node.json')),
+  copyFile(join(root, 'benchmarks/template.json'), join(output, 'data/template.json')),
+  copyFile(join(root, 'benchmarks/template-node.json'), join(output, 'data/template-node.json')),
   writeFile(join(output, '.nojekyll'), ''),
 ]);
 const apiLinks = [
-  ['io', 'Read and write'], ['workbook', 'Workbook'], ['worksheet', 'Worksheet'],
+  ['io', 'Read and write'], ['templates', 'Edit a template'], ['workbook', 'Workbook'], ['worksheet', 'Worksheet'],
   ['row', 'Row'], ['cell', 'Cell'], ['column', 'Column'], ['types', 'Types'],
   ['read-limits', 'Import limits'], ['errors', 'Errors and cancellation'],
 ];
@@ -126,11 +130,11 @@ for (const [index, page] of documents.entries()) {
       </nav>
       <footer class="footer">
         <div><span>MinkExcel · MIT License</span><a href="https://www.figma.com/community/file/1166831539721848736">Solar icons by 480 Design</a></div>
-        <a href="https://github.com/accntech/minkexcel/blob/main/docs/content.mjs">Edit this page ${icon('arrow-right-up')}</a>
+        <a href="https://github.com/accntech/minkexcel/blob/main/docs/site/content.mjs">Edit this page ${icon('arrow-right-up')}</a>
       </footer>
     </main>
     <aside class="toc"><p>On this page</p><nav aria-label="On this page">${sectionLinks}</nav>
-      <a class="edit-link" href="https://github.com/accntech/minkexcel/blob/main/docs/content.mjs">${icon('document-text')} Edit this page</a>
+      <a class="edit-link" href="https://github.com/accntech/minkexcel/blob/main/docs/site/content.mjs">${icon('document-text')} Edit this page</a>
     </aside>
   </div>
   <dialog id="mobile-navigation" class="nav-dialog" aria-labelledby="navigation-title">

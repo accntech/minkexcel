@@ -80,7 +80,6 @@ published documentation path. Review this summary when public behavior changes.
 - `build.mjs`: page shell, navigation, search index and asset assembly.
 - `icons.mjs`: embedded Solar Linear utility SVGs, the official GitHub brand mark, and the shared icon helper.
 - `assets/`: self-hosted fonts and asset licenses, plus Solar attribution.
-- `DESIGN.md`: documentation design tokens and responsive conventions.
 - `serve.mjs`: local static preview server.
 
 Public formatting/value type definitions come directly from `src/model.ts`.
@@ -91,7 +90,11 @@ data is fabricated and building never reruns timing benchmarks.
 
 When updating measurements, review runtime/version/date descriptions and bundle
 size claims in `content.mjs` as well as the new JSON. API member descriptions are
-maintained in `content.mjs`; review them when library behavior changes.
+maintained in `content.mjs`; review them when library behavior changes. The
+benchmarks page also embeds the template workflow results from
+`benchmarks/template.json` and `benchmarks/template-node.json` and publishes both
+datasets for download. Template mode and ReadOptions are included in the API
+reference and the generated agent guide.
 
 ## Verify
 

@@ -5,3 +5,13 @@ dist/
 test-results/
 playwright-report/
 .DS_Store
+AGENTS.md
+DESIGN.md
+design.md
+PRODUCTS.md
+products.md
+.impeccable/
+.fallow/
+.fallow*
+fallow.toml
+docs/plans/

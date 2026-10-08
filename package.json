@@ -42,8 +42,8 @@
     "test:interop": "bun benchmarks/reliability.ts",
     "test:browser": "bun tests/browser.ts",
     "test:treeshaking": "bun tests/treeshaking.ts",
-    "docs:build": "node docs/build.mjs",
-    "docs:preview": "node docs/serve.mjs",
+    "docs:build": "node docs/site/build.mjs",
+    "docs:preview": "node docs/site/serve.mjs",
     "test:docs": "npm run docs:build && bun tests/docs.ts"
   }
 }

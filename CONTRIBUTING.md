@@ -184,15 +184,13 @@ Run `npm run docs:build` to build the static site into `build/docs/`, then
 `npm run docs:preview` to serve it at `http://127.0.0.1:4173/minkexcel/`.
 No site build dependencies are required. After installing the optional tools
 and Chromium, run `npm run test:docs` for navigation, benchmark-data and browser
-checks. See [docs/README.md](docs/README.md) for content editing and the GitHub
+checks. See [docs/site/README.md](docs/site/README.md) for content editing and the GitHub
 Pages workflow.
 
-## Format references and publishing
+## Format references
 
 ZIP layout follows the
 [PKWARE APPNOTE](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT);
 DEFLATE follows [RFC 1951](https://www.rfc-editor.org/rfc/rfc1951).
 Export compression uses the
 [Compression Standard](https://compression.spec.whatwg.org/#supported-formats).
-
-See [RELEASING.md](RELEASING.md) for package previews and publishing.

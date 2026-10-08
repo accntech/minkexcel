@@ -6,10 +6,11 @@ Install with `npm install minkexcel`. The package is ESM-only and includes TypeS
 
 Important behavior:
 
-- Import extracts cell values and cached formula results. Reading and rewriting an existing workbook does not preserve its styles, layout or unsupported features.
+- Import extracts values by default. ReadOptions extends ReadLimits with preserveTemplate (default false). Opt in to retain original archive parts for cell value edits, including formatting, layout, comments and protection. Template mode does not reconstruct style/layout getters; structural and presentation edits throw XlsxError.
 - Formulas are not calculated. Supply a cached result when creating formula cells.
 - Row and column positions are one-based. Arrays passed to `addRow` or assigned to `row.values` are zero-based; reading `row.values` returns a one-based sparse array. Cell addresses use uppercase letters, such as `A1`.
-- Export supports fonts, solid fills, alignment, number formats, merges, frozen rows and print settings. It requires `CompressionStream("deflate")` and Web Streams. Import uses the library's own inflater.
+- Export supports fonts, solid fills, alignment, colored borders, number formats, merges, frozen rows, horizontal print centering and independent lastModifiedBy metadata. It requires `CompressionStream("deflate")` and Web Streams. Import uses the library's own inflater.
+- getWorksheet accepts names and one-based numeric positions. Column.eachCell visits populated cells or includes empty cells when requested. actualRowCount counts populated rows; use eachRow or rowCount when sparse row positions matter.
 - Import validates ZIP checksums and applies configurable resource limits. See `ReadLimits`, `XlsxError`, `XlsxLimitError` and cancellation in the API reference.
 - MinkExcel is a supported subset of ExcelJS, not a drop-in replacement for its entire API. Review the implementation comparison before migrating.
 - Benchmark results describe recorded local workloads. They do not establish universal speed, browser performance, streaming performance or peak memory use.
@@ -28,6 +29,8 @@ Important behavior:
 
 - [Bun measurements](data/matrix.json): Recorded workloads, timings, raw samples, file sizes and runtime metadata.
 - [Node.js measurements](data/matrix-node.json): The corresponding recorded Node.js dataset.
+- [Bun template measurements](data/template.json): Value-only import, template import and complete payroll edit workflow timings.
+- [Node.js template measurements](data/template-node.json): Corresponding template workflow timings on Node.js.
 
 ## Optional
 
