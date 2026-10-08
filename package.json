@@ -1,12 +1,35 @@
 {
   "name": "minkexcel",
   "version": "0.1.0",
-  "private": true,
+  "description": "Small, dependency-free XLSX import and export for accounting workflows.",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "assets/icon.png"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/accntech/minkexcel.git"
+  },
+  "homepage": "https://github.com/accntech/minkexcel#readme",
+  "bugs": {
+    "url": "https://github.com/accntech/minkexcel/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
+    "build": "node tools/node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
     "test": "bun test",
     "bench": "bun benchmarks/exceljs.ts",
     "test:browser": "bun tests/browser.ts"

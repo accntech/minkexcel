@@ -4,6 +4,7 @@
   "type": "module",
   "devDependencies": {
     "@playwright/test": "1.63.0",
-    "exceljs": "4.4.0"
+    "exceljs": "4.4.0",
+    "typescript": "5.9.3"
   }
 }

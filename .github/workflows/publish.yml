@@ -1,0 +1,66 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+
+      - name: Validate release version and select npm tag
+        id: release
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+          const releaseVersion = process.env.RELEASE_TAG.replace(/^v/, '');
+          if (releaseVersion !== version) {
+            throw new Error(`Release tag ${process.env.RELEASE_TAG} must match package.json version ${version}.`);
+          }
+          const prerelease = process.env.RELEASE_PRERELEASE === 'true' || version.includes('-');
+          appendFileSync(process.env.GITHUB_OUTPUT, `npm-tag=${prerelease ? 'next' : 'latest'}\n`);
+          NODE
+
+      - name: Install build tools
+        run: bun install --cwd tools --frozen-lockfile --ignore-scripts
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Check package contents
+        run: npm pack --dry-run
+
+      - name: Publish with npm trusted publishing
+        run: npm publish --tag "$NPM_TAG"
+        env:
+          NPM_TAG: ${{ steps.release.outputs.npm-tag }}
