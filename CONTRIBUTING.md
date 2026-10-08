@@ -1,9 +1,54 @@
 # Contributing to MinkExcel
 
+Please read and follow the [Code of Conduct](CODE_OF_CONDUCT.md) when
+participating in the project. It describes community expectations and how to
+report concerns.
+
 The library manifest has no runtime, development or peer dependencies.
 TypeScript, Playwright and the ExcelJS benchmark reference are isolated in
 `tools/package.json`, with their own lockfile. Unit tests use Bun's built-in
 runner and Node's built-in compressor/inflater as independent DEFLATE references.
+
+## Commit conventions
+
+Follow the repository's existing commit message format:
+
+```text
+type: short description
+```
+
+Use a lowercase type and a concise, imperative description, such as
+`perf: enable tree-shaking and verify consumer bundles`. Existing types include
+`feat`, `perf`, `chore`, `bench`, `ci` and `design`; use `fix` for bug fixes,
+`docs` for documentation and `test` for test changes.
+
+Keep each commit focused on one logical change. Separate unrelated changes into
+their own commits, and use the commit body when the reason or tradeoffs need
+more explanation.
+
+### Verified commits
+
+All commits submitted in a pull request must be signed and show **Verified** on
+GitHub. Configure a GPG, SSH or S/MIME signing key using
+[GitHub's commit signature verification guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification).
+For GPG or SSH, add the public signing key to your GitHub account and configure
+Git to use it.
+
+After configuring your signing key, enable signing for this repository or sign
+each commit explicitly:
+
+```sh
+git config commit.gpgsign true
+git commit -S -m "docs: document contribution requirements"
+```
+
+After pushing your branch, check that every commit in the pull request's
+**Commits** tab has the **Verified** badge. Recheck after amending or rebasing
+commits, since those operations create new commits that also need signatures.
+A `Signed-off-by` trailer (`git commit -s`) does not provide a cryptographic
+signature and does not satisfy this requirement. See
+[GitHub's signing instructions](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)
+for setup and signing details.
 
 ## Build and unit tests
 

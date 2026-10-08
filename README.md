@@ -412,6 +412,9 @@ and [recorded values](benchmarks/reliability.json).
 
 ## Development and releases
 
+All participants are expected to follow the
+[Code of Conduct](https://github.com/accntech/minkexcel/blob/main/CODE_OF_CONDUCT.md).
+
 See [CONTRIBUTING.md](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
 for build, test, browser harness and benchmark commands, and
 [RELEASING.md](https://github.com/accntech/minkexcel/blob/main/RELEASING.md)
