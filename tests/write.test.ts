@@ -4,6 +4,37 @@ import { child, children, parseXml } from '../src/xml.js';
 import { unzip } from './helpers.js';
 
 describe('Workbook export', () => {
+	test('exports thin and double colored borders with style deduplication', async () => {
+		const book = new Workbook(), sheet = book.addWorksheet('Payroll');
+		sheet.addRow(['header', 'same', 'total']);
+		const border = { top: { style: 'thin' as const, color: { argb: 'FF000000' } }, bottom: { style: 'double' as const } };
+		sheet.getCell('A1').border = border;
+		sheet.getCell('B1').border = border;
+		sheet.getCell('C1').border = { bottom: { style: 'double' } };
+		const parts = unzip(await writeWorkbook(book));
+		const styles = parseXml(parts.get('xl/styles.xml')!);
+		expect(child(styles, 'borders')!.children).toHaveLength(3);
+		const borders = child(styles, 'borders')!.children;
+		expect(child(borders[1], 'top')!.attributes.style).toBe('thin');
+		expect(child(child(borders[1], 'top')!, 'color')!.attributes.rgb).toBe('FF000000');
+		expect(child(borders[1], 'bottom')!.attributes.style).toBe('double');
+		const cells = child(parseXml(parts.get('xl/worksheets/sheet1.xml')!), 'sheetData')!.children[0].children;
+		expect(cells[0].attributes.s).toBe(cells[1].attributes.s);
+		expect(cells[2].attributes.s).not.toBe(cells[0].attributes.s);
+		expect(child(styles, 'cellXfs')!.children[1].attributes.applyBorder).toBe('1');
+	});
+
+	test('exports horizontal print centering and an independent last modifier', async () => {
+		const book = new Workbook(), sheet = book.addWorksheet('Attendance');
+		book.creator = 'Creator';
+		book.lastModifiedBy = 'Modifier & Co';
+		sheet.pageSetup.horizontalCentered = true;
+		const parts = unzip(await writeWorkbook(book));
+		expect(child(parseXml(parts.get('xl/worksheets/sheet1.xml')!), 'printOptions')!.attributes.horizontalCentered).toBe('1');
+		expect(parts.get('docProps/core.xml')).toContain('<cp:lastModifiedBy>Modifier &amp; Co</cp:lastModifiedBy>');
+		book.lastModifiedBy = undefined;
+		expect(unzip(await writeWorkbook(book)).get('docProps/core.xml')).toContain('<cp:lastModifiedBy>Creator</cp:lastModifiedBy>');
+	});
 	test('identifies MinkExcel in workbook metadata and preserves custom creators', async () => {
 		const book = new Workbook();
 		book.addWorksheet('Data').addRow(['Example']);

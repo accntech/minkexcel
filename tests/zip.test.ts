@@ -39,6 +39,13 @@ test('writes UTF-8 filenames and compressed DEFLATE entries', async () => {
 		'Hello & 🧾'
 	);
 });
+test('retains binary archive entries and lists their names', async () => {
+	const binary = Uint8Array.from([0, 255, 128, 13, 10, 0, 1]);
+	const bytes = await writeZip(new Map<string, string | Uint8Array>([['image.bin', binary], ['a.xml', 'text']]));
+	const archive = new ZipArchive(bytes, limits);
+	expect(archive.names()).toEqual(['image.bin', 'a.xml']);
+	expect(await archive.read('image.bin')).toEqual(binary);
+});
 test('rejects a checksum mismatch after successfully decompressing intact data', async () => {
 	const bytes = await writeZip(new Map([['a.xml', 'abc']]));
 	const view = new DataView(bytes.buffer);

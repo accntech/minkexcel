@@ -23,11 +23,23 @@ export type Fill = {
 	pattern: 'solid';
 	fgColor: { argb: string };
 };
+export type Border = {
+	style?: 'thin' | 'dotted' | 'dashDot' | 'hair' | 'dashDotDot' | 'slantDashDot' |
+		'mediumDashed' | 'mediumDashDotDot' | 'mediumDashDot' | 'medium' | 'double' | 'thick' | 'dashed';
+	color?: { argb: string };
+};
+export type Borders = {
+	top?: Border;
+	left?: Border;
+	bottom?: Border;
+	right?: Border;
+};
 export type Style = {
 	font?: Font;
 	alignment?: Alignment;
 	fill?: Fill;
 	numFmt?: string;
+	border?: Borders;
 };
 export type PageSetup = {
 	orientation?: 'portrait' | 'landscape';
@@ -35,6 +47,7 @@ export type PageSetup = {
 	fitToPage?: boolean;
 	fitToWidth?: number;
 	fitToHeight?: number;
+	horizontalCentered?: boolean;
 	printTitlesRow?: string;
 	printArea?: string;
 	margins?: {
@@ -69,7 +82,7 @@ export class XlsxError extends Error {
 
 export class XlsxLimitError extends XlsxError {}
 
-export function columnLetter(column: number): string {
+function columnLetter(column: number): string {
 	validateColumn(column);
 	const cached = columnLetters.get(column);
 	if (cached !== undefined) return cached;
@@ -99,6 +112,12 @@ export function parseAddress(address: string): Address {
 
 class Styled {
 	style: Style = {};
+	get border(): Borders {
+		return (this.style.border ??= {});
+	}
+	set border(value: Borders) {
+		this.style.border = value;
+	}
 	get font(): Font {
 		return (this.style.font ??= {});
 	}
@@ -121,12 +140,30 @@ class Styled {
 
 export class Column extends Styled {
 	width?: number;
-	constructor(readonly number: number) {
+	constructor(readonly number: number, readonly sheet?: Worksheet) {
 		super();
 		columnLetter(number);
 	}
 	get letter() {
 		return columnLetter(this.number);
+	}
+	eachCell(callback: (cell: Cell, row: number) => void): void;
+	eachCell(options: { includeEmpty?: boolean }, callback: (cell: Cell, row: number) => void): void;
+	eachCell(
+		options: { includeEmpty?: boolean } | ((cell: Cell, row: number) => void),
+		callback?: (cell: Cell, row: number) => void
+	): void {
+		if (!this.sheet) throw new XlsxError('Column iteration requires an owning worksheet.');
+		const visit = typeof options === 'function' ? options : callback!;
+		if (typeof options !== 'function' && options.includeEmpty) {
+			const last = this.sheet.rowCount;
+			for (let row = 1; row <= last; row++) visit(this.sheet.getCell(row, this.number), row);
+		} else {
+			for (const [number, row] of [...this.sheet.rows].sort(([a], [b]) => a - b)) {
+				const cell = row.cells.get(this.number);
+				if (cell && cell.value !== null) visit(cell, number);
+			}
+		}
 	}
 }
 
@@ -167,6 +204,12 @@ export class Cell extends Styled {
 			...this.master?.style,
 			...this.style
 		};
+	}
+	override get border(): Borders {
+		return (this.style.border ??= structuredClone(this.resolvedStyle.border ?? {}));
+	}
+	override set border(value: Borders) {
+		this.style.border = value;
 	}
 	override get font(): Font {
 		return (this.style.font ??= { ...this.resolvedStyle.font });
@@ -259,6 +302,12 @@ export class Worksheet {
 	get rowCount(): number {
 		return this.lastRow;
 	}
+	get actualRowCount(): number {
+		let count = 0;
+		for (const row of this.rows.values())
+			if ([...row.cells.values()].some((cell) => cell.value !== null)) count++;
+		return count;
+	}
 	get columnCount(): number {
 		let count = 0;
 		for (const row of this.rows.values())
@@ -292,7 +341,7 @@ export class Worksheet {
 	getColumn(number: number): Column {
 		let column = this.columnDefinitions.get(number);
 		if (!column) {
-			column = new Column(number);
+			column = new Column(number, this);
 			this.columnDefinitions.set(number, column);
 		}
 		return column;
@@ -342,6 +391,7 @@ export class Worksheet {
 export class Workbook {
 	readonly worksheets: Worksheet[] = [];
 	creator = 'MinkExcel';
+	lastModifiedBy?: string;
 	created = new Date();
 	modified = this.created;
 	calcProperties = { fullCalcOnLoad: true };
@@ -361,7 +411,9 @@ export class Workbook {
 		this.worksheets.push(sheet);
 		return sheet;
 	}
-	getWorksheet(name: string): Worksheet | undefined {
-		return this.worksheets.find((sheet) => sheet.name === name);
+	getWorksheet(name: string | number): Worksheet | undefined {
+		return typeof name === 'number'
+			? Number.isInteger(name) && name > 0 ? this.worksheets[name - 1] : undefined
+			: this.worksheets.find((sheet) => sheet.name === name);
 	}
 }

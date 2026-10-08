@@ -46,108 +46,112 @@ function entryName(bytes: Uint8Array, flags: number): string {
 		invalid();
 	return name;
 }
+type Directory = { end: number; central: number; count: number };
+type EntryHeader = {
+	flags: number;
+	method: number;
+	crc: number;
+	compressed: number;
+	size: number;
+	local: number;
+	nameLength: number;
+	next: number;
+};
+function endRecord(view: DataView): number {
+	for (let offset = view.byteLength - 22; offset >= Math.max(0, view.byteLength - 22 - 65535); offset--) {
+		if (view.getUint32(offset, true) === 0x06054b50 &&
+			offset + 22 + view.getUint16(offset + 20, true) === view.byteLength)
+			return offset;
+	}
+	return invalid();
+}
+function directory(view: DataView, limits: ArchiveLimits): Directory {
+	const end = endRecord(view);
+	const count = view.getUint16(end + 10, true);
+	const size = view.getUint32(end + 12, true);
+	const central = view.getUint32(end + 16, true);
+	if (view.getUint16(end + 4, true) || view.getUint16(end + 6, true) ||
+		view.getUint16(end + 8, true) !== count || count === 65535 ||
+		size === 0xffffffff || central === 0xffffffff || central + size !== end)
+		invalid();
+	if (count > limits.entries) throw new XlsxLimitError('The workbook contains too many archive entries.');
+	return { end, central, count };
+}
+function centralHeader(view: DataView, cursor: number, end: number): EntryHeader {
+	if (cursor + 46 > end || view.getUint32(cursor, true) !== 0x02014b50) invalid();
+	const nameLength = view.getUint16(cursor + 28, true);
+	const header: EntryHeader = {
+		flags: view.getUint16(cursor + 8, true),
+		method: view.getUint16(cursor + 10, true),
+		crc: view.getUint32(cursor + 16, true),
+		compressed: view.getUint32(cursor + 20, true),
+		size: view.getUint32(cursor + 24, true),
+		local: view.getUint32(cursor + 42, true),
+		nameLength,
+		next: cursor + 46 + nameLength + view.getUint16(cursor + 30, true) + view.getUint16(cursor + 32, true)
+	};
+	if (header.next > end || header.flags & 0x2041 ||
+		(header.method !== 0 && header.method !== 8) || header.compressed === 0xffffffff ||
+		header.size === 0xffffffff || header.local === 0xffffffff || view.getUint16(cursor + 34, true) !== 0)
+		invalid();
+	return header;
+}
+function entryLimits(header: EntryHeader, limits: ArchiveLimits, total: number): void {
+	if (header.size > limits.entryBytes) throw new XlsxLimitError('A workbook archive entry is too large.');
+	if (header.size / Math.max(header.compressed, 1) > limits.compressionRatio)
+		throw new XlsxLimitError('The workbook has an unsafe compression ratio.');
+	if (total > limits.totalBytes) throw new XlsxLimitError('The uncompressed workbook is too large.');
+}
+function localEntry(bytes: Uint8Array, view: DataView, header: EntryHeader, name: string, central: number): Entry {
+	const { local, flags, method, crc, compressed, size } = header;
+	if (local + 30 > central || view.getUint32(local, true) !== 0x04034b50 ||
+		view.getUint16(local + 6, true) !== flags || view.getUint16(local + 8, true) !== method)
+		invalid();
+	const nameLength = view.getUint16(local + 26, true);
+	const start = local + 30 + nameLength + view.getUint16(local + 28, true);
+	if (start + compressed > central ||
+		entryName(bytes.subarray(local + 30, local + 30 + nameLength), flags) !== name)
+		invalid();
+	if (!(flags & 8) && (view.getUint32(local + 14, true) !== crc ||
+		view.getUint32(local + 18, true) !== compressed || view.getUint32(local + 22, true) !== size))
+		invalid();
+	if (method === 0 && compressed !== size) invalid();
+	return { name, method, crc, size, start, end: start + compressed, local };
+}
+function checkOverlaps(entries: Map<string, Entry>): void {
+	let previousEnd = 0;
+	for (const entry of [...entries.values()].sort((a, b) => a.local - b.local)) {
+		if (entry.local < previousEnd) invalid();
+		previousEnd = entry.end;
+	}
+}
+function archiveEntries(bytes: Uint8Array, limits: ArchiveLimits): Map<string, Entry> {
+	if (bytes.length > limits.fileBytes)
+		throw new XlsxLimitError(`File exceeds the ${limits.fileBytes} bytes import limit.`);
+	if (bytes.length < 22) invalid();
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+	const { end, central, count } = directory(view, limits);
+	const entries = new Map<string, Entry>();
+	let cursor = central;
+	let total = 0;
+	for (let index = 0; index < count; index++) {
+		const header = centralHeader(view, cursor, end);
+		total += header.size;
+		entryLimits(header, limits, total);
+		const name = entryName(bytes.subarray(cursor + 46, cursor + 46 + header.nameLength), header.flags);
+		if (entries.has(name)) invalid();
+		entries.set(name, localEntry(bytes, view, header, name, central));
+		cursor = header.next;
+	}
+	if (cursor !== end) invalid();
+	checkOverlaps(entries);
+	return entries;
+}
 /** ZIP32, methods STORE and DEFLATE. All offsets are bounded before access. */
 export class ZipArchive {
-	private entries = new Map<string, Entry>();
-	constructor(
-		private bytes: Uint8Array,
-		private limits: ArchiveLimits
-	) {
-		if (bytes.length > limits.fileBytes)
-			throw new XlsxLimitError(`File exceeds the ${limits.fileBytes} bytes import limit.`);
-		if (bytes.length < 22) invalid();
-		const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-		let end = -1;
-		for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 65535); i--) {
-			if (
-				view.getUint32(i, true) === 0x06054b50 &&
-				i + 22 + view.getUint16(i + 20, true) === bytes.length
-			) {
-				end = i;
-				break;
-			}
-		}
-		if (end < 0) invalid();
-		const count = view.getUint16(end + 10, true),
-			centralSize = view.getUint32(end + 12, true),
-			central = view.getUint32(end + 16, true);
-		if (
-			view.getUint16(end + 4, true) ||
-			view.getUint16(end + 6, true) ||
-			view.getUint16(end + 8, true) !== count ||
-			count === 65535 ||
-			centralSize === 0xffffffff ||
-			central === 0xffffffff ||
-			central + centralSize !== end
-		)
-			invalid();
-		if (count > limits.entries)
-			throw new XlsxLimitError('The workbook contains too many archive entries.');
-		let cursor = central,
-			total = 0;
-		for (let i = 0; i < count; i++) {
-			if (cursor + 46 > end || view.getUint32(cursor, true) !== 0x02014b50) invalid();
-			const flags = view.getUint16(cursor + 8, true),
-				method = view.getUint16(cursor + 10, true),
-				crc = view.getUint32(cursor + 16, true),
-				compressed = view.getUint32(cursor + 20, true),
-				size = view.getUint32(cursor + 24, true);
-			const nameLength = view.getUint16(cursor + 28, true),
-				extraLength = view.getUint16(cursor + 30, true),
-				commentLength = view.getUint16(cursor + 32, true),
-				local = view.getUint32(cursor + 42, true);
-			const entryEnd = cursor + 46 + nameLength + extraLength + commentLength;
-			if (
-				entryEnd > end ||
-				flags & 0x2041 ||
-				(method !== 0 && method !== 8) ||
-				compressed === 0xffffffff ||
-				size === 0xffffffff ||
-				local === 0xffffffff ||
-				view.getUint16(cursor + 34, true) !== 0
-			)
-				invalid();
-			if (size > limits.entryBytes)
-				throw new XlsxLimitError('A workbook archive entry is too large.');
-			if (size / Math.max(compressed, 1) > limits.compressionRatio)
-				throw new XlsxLimitError('The workbook has an unsafe compression ratio.');
-			total += size;
-			if (total > limits.totalBytes)
-				throw new XlsxLimitError('The uncompressed workbook is too large.');
-			const name = entryName(bytes.subarray(cursor + 46, cursor + 46 + nameLength), flags);
-			if (this.entries.has(name)) invalid();
-			if (
-				local + 30 > central ||
-				view.getUint32(local, true) !== 0x04034b50 ||
-				view.getUint16(local + 6, true) !== flags ||
-				view.getUint16(local + 8, true) !== method
-			)
-				invalid();
-			const localName = view.getUint16(local + 26, true),
-				localExtra = view.getUint16(local + 28, true),
-				start = local + 30 + localName + localExtra;
-			if (
-				start + compressed > central ||
-				entryName(bytes.subarray(local + 30, local + 30 + localName), flags) !== name
-			)
-				invalid();
-			if (
-				!(flags & 8) &&
-				(view.getUint32(local + 14, true) !== crc ||
-					view.getUint32(local + 18, true) !== compressed ||
-					view.getUint32(local + 22, true) !== size)
-			)
-				invalid();
-			if (method === 0 && compressed !== size) invalid();
-			this.entries.set(name, { name, method, crc, size, start, end: start + compressed, local });
-			cursor = entryEnd;
-		}
-		if (cursor !== end) invalid();
-		let previousEnd = 0;
-		for (const entry of [...this.entries.values()].sort((a, b) => a.local - b.local)) {
-			if (entry.local < previousEnd) invalid();
-			previousEnd = entry.end;
-		}
+	private entries: Map<string, Entry>;
+	constructor(private bytes: Uint8Array, private limits: ArchiveLimits) {
+		this.entries = archiveEntries(bytes, limits);
 	}
 	async read(
 		name: string,
@@ -165,10 +169,13 @@ export class ZipArchive {
 		await checkpoint(signal);
 		return bytes;
 	}
+	names(): string[] {
+		return [...this.entries.keys()];
+	}
 }
 /** Write DEFLATE-compressed ZIP entries with the platform compression API. */
 export async function writeZip(
-	parts: Map<string, string>,
+	parts: ReadonlyMap<string, string | Uint8Array>,
 	signal?: AbortSignal
 ): Promise<Uint8Array> {
 	signal?.throwIfAborted();
@@ -184,7 +191,7 @@ export async function writeZip(
 		centralSize = 0;
 	for (const [path, text] of parts) {
 		const name = encoder.encode(path),
-			input = encoder.encode(text);
+			input = typeof text === 'string' ? encoder.encode(text) : new Uint8Array(text);
 		entryName(name, 0x800);
 		if (name.length > 65535) invalid();
 		const data = await deflate(input, signal);

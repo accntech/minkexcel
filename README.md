@@ -17,9 +17,10 @@ imports, CRC32 validation, strict XML checks and preservation of literal cell
 text. See the [ExcelJS comparison](#minkexcel-vs-exceljs) for measured speed and
 file-integrity results.
 
-Import is value-oriented: reading and rewriting an existing workbook does not
-preserve its styles, layout or unsupported features. Use it for data extraction
-and new reports when that scope fits your application.
+Import extracts values by default. Use `preserveTemplate: true` to update cell
+values in an existing workbook while retaining its original formatting, layout,
+protection, comments and other archive parts. Template mode retains those parts
+without exposing a complete presentation editing API.
 
 ## Documentation site
 
@@ -203,6 +204,7 @@ const inventory = report.addWorksheet("Inventory", {
   views: [{ state: "frozen", ySplit: 2 }],
   pageSetup: {
     orientation: "landscape",
+    horizontalCentered: true,
     fitToPage: true,
     fitToWidth: 1,
     fitToHeight: 0,
@@ -216,6 +218,9 @@ inventory.mergeCells("A1:D1");
 inventory.getCell("A1").font = { bold: true, size: 16 };
 inventory.addRow(["SKU", "Product", "Updated on", "Stock"]);
 inventory.getRow(2).font = { bold: true };
+inventory.getRow(2).eachCell((cell) => {
+  cell.border = { top: { style: "thin" }, bottom: { style: "double" } };
+});
 inventory.getRow(2).height = 24;
 inventory.getCell("D2").fill = {
   type: "pattern",
@@ -251,11 +256,13 @@ formula results that represent dates remain numeric serials.
 
 - Values: strings, numbers, booleans, dates, blanks, errors and cached formulas.
   Strings retain leading zeros, Unicode, whitespace and Excel escape sequences.
-- Export: workbook metadata, multiple sheets, row gaps, widths, heights, fonts,
-  solid fills, alignment, number formats, merged cells, frozen rows, filters,
-  print titles/areas, page setup/margins and footers.
+- Export: workbook metadata including independent `lastModifiedBy`, multiple
+  sheets, row gaps, widths, heights, fonts, solid fills, alignment, colored
+  borders, number formats, merged cells, frozen rows, filters, print titles/areas,
+  page setup/margins, horizontal print centering and footers.
 - Import: shared/inline strings, rich text flattened to text, hyperlink display
-  text, cached formulas and 1900/1904 dates. Presentation is not preserved.
+  text, cached formulas and 1900/1904 dates. Default imports do not retain
+  presentation; template mode retains the original package for value edits.
 - Archive handling: ZIP32 STORE and DEFLATE, CRC32 checks, internal relationship
   resolution, XML parsing without external DTD/entity resolution, size and
   nesting limits, and cancellation checkpoints during archive/row processing.
@@ -263,8 +270,8 @@ formula results that represent dates remain numeric serials.
 
 MinkExcel does not read legacy `.xls`, support ZIP64/encryption, implement charts,
 images, macros, tables, data validation or conditional formatting, or provide the
-complete ExcelJS API. Reading and rewriting arbitrary workbooks loses features
-outside the import scope.
+complete ExcelJS API. Existing unsupported parts are retained in template mode
+but cannot be created or edited through the model. Default imports discard them.
 
 Export uses the standard `CompressionStream("deflate")` API and removes its
 zlib envelope to obtain raw ZIP DEFLATE. ZIP headers and checksums are owned by
@@ -272,7 +279,8 @@ the package. Import accepts stored and compressed workbooks.
 
 ### Import limits and errors
 
-`readWorkbook(bytes, limits?, signal?)` accepts a partial `ReadLimits` object.
+`readWorkbook(bytes, options?, signal?)` accepts `ReadOptions`: the partial
+`ReadLimits` object plus an optional `preserveTemplate` boolean (default false).
 Fields you omit retain their defaults; byte limits use bytes, not decimal MB.
 Explicit limits must be finite nonnegative safe integers, except
 `compressionRatio`, which must be finite and greater than zero. An explicit
@@ -322,6 +330,64 @@ try {
 Inflate output is bounded by the entry's declared size and validated against
 its CRC32. Import limits do not apply to export.
 
+### Edit an existing template
+
+```ts
+const book = await readWorkbook(templateBytes, { preserveTemplate: true });
+const sheet = book.getWorksheet(1)!;
+book.creator = "PCSTI ERP";
+book.modified = new Date();
+
+for (let row = 2; row <= sheet.rowCount; row++) {
+  for (let column = 1; column <= 3; column++) sheet.getCell(row, column).value = null;
+}
+sheet.getCell(2, 1).value = "Employee name";
+sheet.getCell(2, 2).value = "000012345678";
+sheet.getCell(2, 3).value = 1234.50;
+const output = await writeWorkbook(book);
+```
+
+Template mode supports clearing, replacing and appending cell values and updating
+existing core metadata fields. Original styles, column widths, row heights,
+merges, comments, protection, relationships and binary parts are retained. New
+cells inherit an existing column style. Presentation remains in the retained
+XML; imported style and layout getters do not reconstruct it. Edit the top-left
+cell of an existing merge. Dates require an existing date-formatted cell or
+column and retain the template's 1900/1904 date system.
+
+Only changed metadata fields are rewritten; missing, unchanged fields do not
+prevent export. Changing a metadata field that is absent from the template
+throws `XlsxError`.
+
+Adding, removing or reordering worksheets, changing presentation or calculation
+properties, editing merged member cells or shared/array formula ranges, and
+assigning dates without an existing date format throw `XlsxError`. Formula caches
+are not recalculated; changed values request full recalculation when opened in
+Excel. The original shared strings and untouched cells remain intact; replacement
+strings use inline strings. All retained archive parts are checksum-validated.
+This mode retains more data in memory than the default value import. External
+relationships may be retained but are never fetched.
+
+### Iteration and row counts
+
+`getWorksheet` accepts an exact name or a one-based numeric worksheet position.
+`actualRowCount` counts populated rows; `rowCount` is the furthest created row.
+Use `eachRow` for sparse imports instead of treating `actualRowCount` as the last
+row number:
+
+```ts
+sheet.eachRow((row, number) => {
+  if (number > 1) console.log(row.values);
+});
+sheet.getColumn(3).eachCell((cell, rowNumber) => {
+  cell.alignment = { ...cell.alignment, wrapText: true };
+});
+// Include null cells through rowCount when required:
+sheet.getColumn(3).eachCell({ includeEmpty: true }, (cell) => {
+  cell.border = { bottom: { style: "thin" } };
+});
+```
+
 ### Cancellation
 
 Both operations accept an optional `AbortSignal`:
@@ -351,10 +417,13 @@ when you need its broader workbook model, richer formatting or Node streaming I/
 | `new ExcelJS.Workbook()` | `new Workbook()` |
 | `await book.xlsx.writeBuffer()` | `await writeWorkbook(book)` |
 | `await book.xlsx.load(bytes)` | `const book = await readWorkbook(bytes)` |
+| Load/edit/save an existing template | `readWorkbook(bytes, { preserveTemplate: true })`, then `writeWorkbook(book)` |
+| `getWorksheet(1)`, `actualRowCount`, `getColumn(n).eachCell(...)`, `cell.border` | Supported |
 | `book.addWorksheet(name)`, `sheet.addRow(values)`, `sheet.getCell(address)` | Same method names for the supported subset |
 
-`readWorkbook` creates a new workbook. It imports values rather than restoring
-presentation, and MinkExcel does not implement every ExcelJS method or feature.
+`readWorkbook` creates a new workbook. Its default import extracts values;
+template mode retains original parts for value edits. MinkExcel keeps the
+top-level I/O functions and does not expose `workbook.xlsx.load/writeBuffer`.
 
 This comparison uses MinkExcel 0.1.0 and ExcelJS 4.4.0, the version used by the
 benchmark. ExcelJS features are documented in its
@@ -366,10 +435,10 @@ and dependencies in its
 | --- | --- | --- |
 | Runtime npm dependencies | None | Nine direct dependencies, plus transitive dependencies |
 | File formats | XLSX | XLSX and CSV |
-| Imported presentation | Reads values; does not retain styles or layout | Reads supported styles and workbook features for editing; not lossless for arbitrary files |
-| Export formatting | Fonts, solid fills, alignment, number formats, merges and print settings | Broader styling, including borders and gradient fills |
+| Imported presentation | Default: values only. Template mode: retain original parts for cell value edits | Reads supported styles and workbook features for editing; not lossless for arbitrary files |
+| Export formatting | Fonts, solid fills, alignment, colored borders, number formats, merges and print settings | Broader styling, including gradient fills |
 | Rich text and hyperlinks | Imports display text only | Rich text and hyperlink cell values |
-| Images, tables, data validation and conditional formatting | Unsupported | Supported, with feature-specific limitations |
+| Images, tables, data validation and conditional formatting | Retained opaquely in templates; no creation/editing API | Supported, with feature-specific limitations |
 | Formulas | Formula text and cached results; no calculation engine | Formula text and supplied results; no calculation engine |
 | Workbook processing | In memory; optional `AbortSignal` and configurable import limits | In-memory document model and Node streaming reader/writer |
 | Browser use | ES modules; export requires `CompressionStream('deflate')` and Web Streams | Browser bundles for the document model; streaming reader/writer excluded |

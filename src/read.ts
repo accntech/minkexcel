@@ -1,9 +1,11 @@
 import { ZipArchive, type ArchiveLimits } from './zip.js';
 import { checkpoint } from './async.js';
-import { Workbook, XlsxError, XlsxLimitError, parseAddress, type CellValue } from './model.js';
+import { Workbook, XlsxError, XlsxLimitError, parseAddress, type CellValue, type Worksheet } from './model.js';
 import { child, children, decodeExcelText, parseXml, stringText, type XmlNode, type XmlVisitor } from './xml.js';
+import { templates, valueKey, metadataKey, presentationKey, type TemplateSheet, type TemplateRow } from './template.js';
 type Limits = ArchiveLimits & { rows: number; columns: number; cells: number };
 export type ReadLimits = Partial<Limits>;
+export type ReadOptions = ReadLimits & { preserveTemplate?: boolean };
 const defaultLimits: Limits = {
 	fileBytes: 5 * 1024 * 1024,
 	entries: 1_000,
@@ -59,192 +61,264 @@ function serialDate(serial: number, date1904: boolean): Date {
 	return date;
 }
 
-function cellValue(
-	node: XmlNode,
-	strings: string[],
-	dateStyles: boolean[],
-	date1904: boolean
-): CellValue {
+type CellContext = { strings: string[]; dateStyles: boolean[]; date1904: boolean };
+
+function isoDate(text: string): Date {
+	const date = new Date(text);
+	if (!Number.isFinite(date.getTime())) throw new XlsxError('Invalid date cell.');
+	return date;
+}
+function sharedString(raw: string | undefined, strings: string[]): string {
+	const index = Number(raw);
+	if (raw === undefined || !Number.isInteger(index) || index < 0 || index >= strings.length)
+		throw new XlsxError('Invalid shared-string index.');
+	return strings[index];
+}
+function numberValue(raw: string | undefined): number | null {
+	if (raw === undefined || raw === '') return null;
+	const value = Number(raw);
+	if (!Number.isFinite(value)) throw new XlsxError('Invalid numeric cell.');
+	return value;
+}
+function scalarValue(node: XmlNode, strings: string[]): CellValue {
 	const raw = child(node, 'v')?.text;
-	const formula = child(node, 'f');
-	let value: CellValue;
 	switch (node.attributes.t) {
 		case 'inlineStr': {
 			const inline = child(node, 'is');
-			value = inline ? stringText(inline) : '';
-			break;
+			return inline ? stringText(inline) : '';
 		}
-		case 's': {
-			const index = Number(raw);
-			if (raw === undefined || !Number.isInteger(index) || index < 0 || index >= strings.length)
-				throw new XlsxError('Invalid shared-string index.');
-			value = strings[index];
-			break;
-		}
-		case 'str':
-			value = decodeExcelText(raw ?? '');
-			break;
+		case 's': return sharedString(raw, strings);
+		case 'str': return decodeExcelText(raw ?? '');
 		case 'b':
 			if (raw !== '0' && raw !== '1') throw new XlsxError('Invalid boolean cell.');
-			value = raw === '1';
-			break;
-		case 'e':
-			value = { error: raw ?? '#VALUE!' };
-			break;
-		case 'd': {
-			const date = new Date(raw ?? '');
-			if (!Number.isFinite(date.getTime())) throw new XlsxError('Invalid date cell.');
-			value = date;
-			break;
-		}
+			return raw === '1';
+		case 'e': return { error: raw ?? '#VALUE!' };
+		case 'd': return isoDate(raw ?? '');
 		case 'n':
-		case undefined: {
-			if (raw === undefined || raw === '') value = null;
-			else {
-				const number = Number(raw);
-				if (!Number.isFinite(number)) throw new XlsxError('Invalid numeric cell.');
-				value =
-					!formula && dateStyles[Number(node.attributes.s ?? 0)]
-						? serialDate(number, date1904)
-						: number;
-			}
-			break;
-		}
-		default:
-			throw new XlsxError('Unsupported workbook cell type.');
+		case undefined: return numberValue(raw);
+		default: throw new XlsxError('Unsupported workbook cell type.');
 	}
-	if (formula)
-		return {
-			formula: formula.text,
-			...(value !== null && !(value instanceof Date)
-				? { result: value as string | number | boolean | { error: string } }
-				: {})
-		};
+}
+function cellValue(node: XmlNode, context: CellContext): CellValue {
+	const value = scalarValue(node, context.strings);
+	const formula = child(node, 'f');
+	if (formula) {
+		if (value === null || value instanceof Date) return { formula: formula.text };
+		return { formula: formula.text, result: value as string | number | boolean | { error: string } };
+	}
+	if (typeof value === 'number' && context.dateStyles[Number(node.attributes.s ?? 0)])
+		return serialDate(value, context.date1904);
 	return value;
 }
 
-/** Value-oriented import reader. Imported presentation features are deliberately not round-tripped. */
-export async function readWorkbook(
-	bytes: Uint8Array,
-	options: ReadLimits = {},
-	signal?: AbortSignal
-): Promise<Workbook> {
-	signal?.throwIfAborted();
-	try {
-		const limits = { ...defaultLimits };
-		for (const key of Object.keys(defaultLimits) as Array<keyof Limits>) {
-			const value = options[key];
-			if (value === undefined) continue;
-			if (key === 'compressionRatio'
-				? !Number.isFinite(value) || value <= 0
-				: !Number.isSafeInteger(value) || value < 0)
-				throw new XlsxLimitError(`Invalid import limit: ${key}.`);
-			limits[key] = value;
-		}
-		if (bytes.byteLength > limits.fileBytes)
-			throw new XlsxLimitError(`File exceeds the ${limits.fileBytes} bytes import limit.`);
-		const zip = new ZipArchive(bytes, limits);
-		let remaining = limits.totalBytes;
-		const readPart = async (path: string, onClose?: XmlVisitor) => {
-			const data = await zip.read(path, Math.min(limits.entryBytes, remaining), signal);
-			remaining -= data.length;
-			return parseXml(new TextDecoder('utf-8', { fatal: true }).decode(data), onClose);
-		};
-		const rootRels = relationships(await readPart('_rels/.rels'), '');
-		const workbookRel = rootRels.find((entry) => entry.type.endsWith('/officeDocument'));
-		if (!workbookRel) throw new XlsxError('Missing workbook relationship.');
-		const document = await readPart(workbookRel.target);
-		if (document.name !== 'workbook') throw new XlsxError('Invalid workbook document.');
-		const rels = relationships(await readPart(relsPath(workbookRel.target)), workbookRel.target);
-		const shared = rels.find((entry) => entry.type.endsWith('/sharedStrings'));
-		const strings: string[] = [];
-		if (shared) {
-			const document = await readPart(shared.target, (node, parent, depth) => {
-				if (node.name !== 'si' || parent?.name !== 'sst' || depth !== 1) return false;
-				strings.push(stringText(node));
-				return true;
-			});
-			if (document.name !== 'sst') throw new XlsxError('Invalid shared-string document.');
-		}
-		const styleRel = rels.find((entry) => entry.type.endsWith('/styles'));
-		let dateStyles: boolean[] = [];
-		if (styleRel) {
-			const styles = await readPart(styleRel.target);
-			const customFormats = new Map(
-				(child(styles, 'numFmts')?.children ?? []).map((entry) => [
-					Number(entry.attributes.numFmtId),
-					entry.attributes.formatCode
-				])
-			);
-			dateStyles = (child(styles, 'cellXfs')?.children ?? []).map((entry) => {
-				const id = Number(entry.attributes.numFmtId);
-				return (
-					(id >= 14 && id <= 22) ||
-					(id >= 45 && id <= 47) ||
-					dateFormat(customFormats.get(id) ?? '')
-				);
-			});
-		}
-		const date1904 = ['1', 'true'].includes(
-			child(document, 'workbookPr')?.attributes.date1904 ?? ''
-		);
-		const book = new Workbook();
-		const sheets = child(document, 'sheets');
-		if (!sheets) throw new XlsxError('Missing workbook sheets.');
-		for (const sheetNode of children(sheets, 'sheet')) {
-			// Namespace prefixes can differ between producers; match the relationship id by local name.
-			const id = Object.entries(sheetNode.attributes).find(
-				([name]) => name.includes(':') && name.split(':').at(-1) === 'id'
-			)?.[1];
-			const relation = rels.find((entry) => entry.id === id && entry.type.endsWith('/worksheet'));
-			if (!relation) throw new XlsxError('Missing worksheet relationship.');
-			const sheet = book.addWorksheet(sheetNode.attributes.name);
-			let previousRow = 0;
-			let maximumColumn = 0;
-			const readRow = (rowNode: XmlNode) => {
-				const rowNumber =
-					rowNode.attributes.r === undefined ? previousRow + 1 : Number(rowNode.attributes.r);
-				if (rowNumber <= previousRow) throw new XlsxError('Invalid worksheet row order.');
-				if (rowNumber - 1 > limits.rows)
-					throw new XlsxLimitError(`The worksheet exceeds the ${limits.rows}-row limit.`);
-				if (rowNumber * Math.max(maximumColumn, 1) > limits.cells)
-					throw new XlsxLimitError(`The worksheet exceeds the ${limits.cells}-cell limit.`);
-				previousRow = rowNumber;
-				const row = sheet.getRow(rowNumber);
-				let previousColumn = 0;
-				for (const node of children(rowNode, 'c')) {
-					const address = node.attributes.r
-						? parseAddress(node.attributes.r)
-						: { row: rowNumber, column: previousColumn + 1 };
-					if (address.row !== rowNumber || address.column <= previousColumn)
-						throw new XlsxError('Invalid worksheet cell order.');
-					previousColumn = address.column;
-					if (address.column > limits.columns)
-						throw new XlsxLimitError(`The worksheet exceeds the ${limits.columns}-column limit.`);
-					maximumColumn = Math.max(maximumColumn, address.column);
-					if (rowNumber * maximumColumn > limits.cells)
-						throw new XlsxLimitError(`The worksheet exceeds the ${limits.cells}-cell limit.`);
-					row.getCell(address.column).value = cellValue(node, strings, dateStyles, date1904);
-				}
-			};
-			// Consume completed rows before retaining a whole worksheet XML tree.
-			// The signal path retains row checkpoints for event-loop cancellation.
-			const document = await readPart(relation.target, signal ? undefined : (node, parent, depth) => {
-				if (node.name !== 'row' || parent?.name !== 'sheetData' || depth !== 2) return false;
-				readRow(node);
-				return true;
-			});
-			if (document.name !== 'worksheet') throw new XlsxError('Invalid worksheet document.');
-			const dataSections = children(document, 'sheetData');
-			if (dataSections.length !== 1) throw new XlsxError('Invalid or missing worksheet data.');
-			if (signal) {
-				for (const rowNode of children(dataSections[0], 'row')) {
-					if (previousRow % 256 === 0) await checkpoint(signal);
-					readRow(rowNode);
-				}
+function importLimits(bytes: Uint8Array, options: ReadOptions): Limits {
+	if (options.preserveTemplate !== undefined && typeof options.preserveTemplate !== 'boolean')
+		throw new XlsxError('preserveTemplate must be a boolean.');
+	const limits = { ...defaultLimits };
+	for (const key of Object.keys(defaultLimits) as Array<keyof Limits>) {
+		const value = options[key];
+		if (value === undefined) continue;
+		const valid = key === 'compressionRatio'
+			? Number.isFinite(value) && value > 0
+			: Number.isSafeInteger(value) && value >= 0;
+		if (!valid) throw new XlsxLimitError(`Invalid import limit: ${key}.`);
+		limits[key] = value;
+	}
+	if (bytes.byteLength > limits.fileBytes)
+		throw new XlsxLimitError(`File exceeds the ${limits.fileBytes} bytes import limit.`);
+	return limits;
+}
+
+class ImportContext {
+	readonly zip: ZipArchive;
+	readonly parts = new Map<string, Uint8Array>();
+	private sources = new Map<string, string>();
+	private remaining: number;
+	constructor(bytes: Uint8Array, readonly limits: Limits, readonly preserve: boolean, readonly signal?: AbortSignal) {
+		this.zip = new ZipArchive(bytes, limits);
+		this.remaining = limits.totalBytes;
+	}
+	async readBytes(path: string): Promise<Uint8Array> {
+		const cached = this.parts.get(path);
+		if (cached) return cached;
+		const data = await this.zip.read(path, Math.min(this.limits.entryBytes, this.remaining), this.signal);
+		this.remaining -= data.length;
+		if (this.preserve) this.parts.set(path, data.slice());
+		return data;
+	}
+	async readPart(path: string, onClose?: XmlVisitor): Promise<XmlNode> {
+		const source = new TextDecoder('utf-8', { fatal: true }).decode(await this.readBytes(path));
+		if (this.preserve) this.sources.set(path, source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n'));
+		return parseXml(source, onClose, this.preserve);
+	}
+	retainedPart(path: string, document: XmlNode) {
+		const source = this.sources.get(path);
+		if (source === undefined) throw new XlsxError('Missing retained template XML.');
+		return { path, xml: source, document };
+	}
+}
+
+async function sharedStrings(rels: Relationship[], context: ImportContext): Promise<string[]> {
+	const relation = rels.find((entry) => entry.type.endsWith('/sharedStrings'));
+	if (!relation) return [];
+	const strings: string[] = [];
+	const document = await context.readPart(relation.target, (node, parent, depth) => {
+		if (node.name !== 'si' || parent?.name !== 'sst' || depth !== 1) return false;
+		strings.push(stringText(node));
+		return true;
+	});
+	if (document.name !== 'sst') throw new XlsxError('Invalid shared-string document.');
+	return strings;
+}
+async function dateFormats(rels: Relationship[], context: ImportContext): Promise<boolean[]> {
+	const relation = rels.find((entry) => entry.type.endsWith('/styles'));
+	if (!relation) return [];
+	const styles = await context.readPart(relation.target);
+	const customFormats = new Map((child(styles, 'numFmts')?.children ?? [])
+		.map((entry) => [Number(entry.attributes.numFmtId), entry.attributes.formatCode]));
+	return (child(styles, 'cellXfs')?.children ?? []).map((entry) => {
+		const id = Number(entry.attributes.numFmtId);
+		return (id >= 14 && id <= 22) || (id >= 45 && id <= 47) || dateFormat(customFormats.get(id) ?? '');
+	});
+}
+function worksheetRelation(node: XmlNode, rels: Relationship[]): Relationship {
+	// Namespace prefixes can differ between producers; match ids by local name.
+	const id = Object.entries(node.attributes).find(
+		([name]) => name.includes(':') && name.split(':').at(-1) === 'id')?.[1];
+	const relation = rels.find((entry) => entry.id === id && entry.type.endsWith('/worksheet'));
+	if (!relation) throw new XlsxError('Missing worksheet relationship.');
+	return relation;
+}
+
+class WorksheetReader {
+	readonly rows = new Map<number, TemplateRow>();
+	readonly values = new Map<string, string>();
+	private previousRow = 0;
+	private maximumColumn = 0;
+	constructor(readonly sheet: Worksheet, private context: ImportContext, private cells: CellContext) {}
+	private checkExtent(row: number): void {
+		const limit = this.context.limits.cells;
+		if (row * Math.max(this.maximumColumn, 1) > limit)
+			throw new XlsxLimitError(`The worksheet exceeds the ${limit}-cell limit.`);
+	}
+	private cellAddress(node: XmlNode, row: number, previousColumn: number) {
+		const address = node.attributes.r ? parseAddress(node.attributes.r) : { row, column: previousColumn + 1 };
+		if (address.row !== row || address.column <= previousColumn)
+			throw new XlsxError('Invalid worksheet cell order.');
+		if (address.column > this.context.limits.columns)
+			throw new XlsxLimitError(`The worksheet exceeds the ${this.context.limits.columns}-column limit.`);
+		this.maximumColumn = Math.max(this.maximumColumn, address.column);
+		this.checkExtent(row);
+		return address;
+	}
+	readRow(node: XmlNode): void {
+		const number = node.attributes.r === undefined ? this.previousRow + 1 : Number(node.attributes.r);
+		if (number <= this.previousRow) throw new XlsxError('Invalid worksheet row order.');
+		if (number - 1 > this.context.limits.rows)
+			throw new XlsxLimitError(`The worksheet exceeds the ${this.context.limits.rows}-row limit.`);
+		this.checkExtent(number);
+		this.previousRow = number;
+		const row = this.sheet.getRow(number);
+		const retained = this.context.preserve ? new Map<number, XmlNode>() : undefined;
+		let previousColumn = 0;
+		for (const cellNode of children(node, 'c')) {
+			const address = this.cellAddress(cellNode, number, previousColumn);
+			previousColumn = address.column;
+			const cell = row.getCell(address.column);
+			cell.value = cellValue(cellNode, this.cells);
+			if (retained) {
+				retained.set(address.column, cellNode);
+				this.values.set(cell.address, valueKey(cell.value));
 			}
 		}
-		return book;
+		if (retained) this.rows.set(number, { node, cells: retained });
+	}
+	async read(path: string): Promise<XmlNode> {
+		const retained = this.context.signal || this.context.preserve;
+		// Value-only imports consume completed rows without retaining the XML tree.
+		const visit: XmlVisitor = (node, parent, depth) => {
+			if (node.name !== 'row' || parent?.name !== 'sheetData' || depth !== 2) return false;
+			this.readRow(node);
+			return true;
+		};
+		const document = await this.context.readPart(path, retained ? undefined : visit);
+		if (document.name !== 'worksheet') throw new XlsxError('Invalid worksheet document.');
+		const data = children(document, 'sheetData');
+		if (data.length !== 1) throw new XlsxError('Invalid or missing worksheet data.');
+		if (retained) await this.readRows(data[0]);
+		return document;
+	}
+	private async readRows(data: XmlNode): Promise<void> {
+		for (const node of children(data, 'row')) {
+			if (this.previousRow % 256 === 0) await checkpoint(this.context.signal);
+			this.readRow(node);
+		}
+	}
+}
+
+function coreMetadata(book: Workbook, document: XmlNode): void {
+	book.creator = child(document, 'creator')?.text ?? book.creator;
+	book.lastModifiedBy = child(document, 'lastModifiedBy')?.text;
+	for (const name of ['created', 'modified'] as const) {
+		const text = child(document, name)?.text;
+		if (!text) continue;
+		const date = new Date(text);
+		if (!Number.isFinite(date.getTime())) throw new XlsxError('Invalid template metadata date.');
+		book[name] = date;
+	}
+}
+async function retainTemplate(book: Workbook, sheets: TemplateSheet[], cells: CellContext,
+	workbook: ReturnType<ImportContext['retainedPart']>, rootRels: Relationship[], context: ImportContext): Promise<void> {
+	const relation = rootRels.find((entry) => entry.type.endsWith('/core-properties'));
+	let core: ReturnType<ImportContext['retainedPart']> | undefined;
+	if (relation) {
+		const document = await context.readPart(relation.target);
+		core = context.retainedPart(relation.target, document);
+		coreMetadata(book, document);
+	}
+	// Validate CRCs for every retained part, including binary media and comments.
+	for (const name of context.zip.names()) await context.readBytes(name);
+	templates.set(book, {
+		parts: context.parts, sheets, date1904: cells.date1904, dateStyles: cells.dateStyles,
+		workbook, core, metadata: metadataKey(book), calculation: JSON.stringify(book.calcProperties)
+	});
+}
+async function importWorkbook(context: ImportContext): Promise<Workbook> {
+	const rootRels = relationships(await context.readPart('_rels/.rels'), '');
+	const workbookRel = rootRels.find((entry) => entry.type.endsWith('/officeDocument'));
+	if (!workbookRel) throw new XlsxError('Missing workbook relationship.');
+	const document = await context.readPart(workbookRel.target);
+	if (document.name !== 'workbook') throw new XlsxError('Invalid workbook document.');
+	const rels = relationships(await context.readPart(relsPath(workbookRel.target)), workbookRel.target);
+	const cells: CellContext = {
+		strings: await sharedStrings(rels, context),
+		dateStyles: await dateFormats(rels, context),
+		date1904: ['1', 'true'].includes(child(document, 'workbookPr')?.attributes.date1904 ?? '')
+	};
+	const book = new Workbook();
+	const retainedSheets: TemplateSheet[] = [];
+	const sheets = child(document, 'sheets');
+	if (!sheets) throw new XlsxError('Missing workbook sheets.');
+	for (const node of children(sheets, 'sheet')) {
+		const relation = worksheetRelation(node, rels);
+		const reader = new WorksheetReader(book.addWorksheet(node.attributes.name), context, cells);
+		const document = await reader.read(relation.target);
+		if (context.preserve) retainedSheets.push({
+			...context.retainedPart(relation.target, document), sheet: reader.sheet,
+			rows: reader.rows, values: reader.values, presentation: presentationKey(reader.sheet)
+		});
+	}
+	if (context.preserve)
+		await retainTemplate(book, retainedSheets, cells, context.retainedPart(workbookRel.target, document), rootRels, context);
+	return book;
+}
+
+/** Value-oriented import; preserveTemplate retains the archive for cell value edits. */
+export async function readWorkbook(bytes: Uint8Array, options: ReadOptions = {}, signal?: AbortSignal): Promise<Workbook> {
+	signal?.throwIfAborted();
+	try {
+		const context = new ImportContext(bytes, importLimits(bytes, options), options.preserveTemplate === true, signal);
+		return await importWorkbook(context);
 	} catch (cause) {
 		if (signal?.aborted) throw signal.reason;
 		throw cause instanceof XlsxError ? cause : new XlsxError('Invalid workbook.', { cause });

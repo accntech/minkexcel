@@ -2,6 +2,64 @@ import { describe, expect, test } from 'bun:test';
 import { Workbook, XlsxError, type CellValue } from '../src/index.js';
 
 describe('worksheet model', () => {
+	test('looks up worksheets by one-based id and exact name', () => {
+		const book = new Workbook();
+		const first = book.addWorksheet('First');
+		const second = book.addWorksheet('Second');
+		expect(book.getWorksheet(1)).toBe(first);
+		expect(book.getWorksheet(2)).toBe(second);
+		for (const id of [0, -1, 1.5, 3, NaN]) expect(book.getWorksheet(id)).toBeUndefined();
+		expect(book.getWorksheet('Second')).toBe(second);
+	});
+
+	test('counts populated rows independently of their positions', () => {
+		const sheet = new Workbook().addWorksheet('Sparse');
+		sheet.getCell('A1').value = 'header';
+		sheet.getCell('A5').value = 0;
+		sheet.getCell('B8').value = false;
+		sheet.getCell('C9').value = '';
+		sheet.getRow(12);
+		expect(sheet.actualRowCount).toBe(4);
+		expect(sheet.rowCount).toBe(12);
+		sheet.getCell('A5').value = null;
+		expect(sheet.actualRowCount).toBe(3);
+	});
+
+	test('iterates a column in row order, includes falsy values and supports wrapping', () => {
+		const sheet = new Workbook().addWorksheet('Data');
+		sheet.getCell('B8').value = false;
+		sheet.getCell('A3').value = 'other column';
+		sheet.getCell('B5').value = 0;
+		sheet.getCell('B1').value = '';
+		sheet.getCell('B2');
+		const visited: Array<[number, CellValue]> = [];
+		sheet.getColumn(2).eachCell((cell, row) => {
+			visited.push([row, cell.value]);
+			cell.alignment = { ...cell.alignment, wrapText: true };
+		});
+		expect(visited).toEqual([[1, ''], [5, 0], [8, false]]);
+		expect(sheet.getCell('B5').alignment.wrapText).toBe(true);
+		expect(sheet.getCell('A3').alignment.wrapText).toBeUndefined();
+	});
+
+	test('iterates empty column cells only when requested', () => {
+		const sheet = new Workbook().addWorksheet('Data');
+		sheet.getCell('B3').value = 'last';
+		const visited: number[] = [];
+		sheet.getColumn(2).eachCell({ includeEmpty: true }, (_cell, row) => visited.push(row));
+		expect(visited).toEqual([1, 2, 3]);
+	});
+
+	test('inherits borders and isolates nested mutations from sibling cells', () => {
+		const sheet = new Workbook().addWorksheet('Data');
+		sheet.getColumn(1).border = { top: { style: 'thin', color: { argb: 'FF000000' } } };
+		const cell = sheet.getCell('A1');
+		expect(cell.border.top?.style).toBe('thin');
+		cell.border.top!.color!.argb = 'FF112233';
+		expect(sheet.getCell('A2').border.top?.color?.argb).toBe('FF000000');
+		sheet.getRow(3).border = { bottom: { style: 'double' } };
+		expect(sheet.getCell('A3').border.bottom?.style).toBe('double');
+	});
 	test('address and numeric access identify the same cell at column boundaries', () => {
 		const sheet = new Workbook().addWorksheet('Data');
 		for (const [column, letter] of [[1, 'A'], [26, 'Z'], [27, 'AA'], [702, 'ZZ'], [703, 'AAA'], [16384, 'XFD']] as const) {

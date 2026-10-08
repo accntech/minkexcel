@@ -10,9 +10,11 @@ export {
 	type Font,
 	type Alignment,
 	type Fill,
+	type Border,
+	type Borders,
 	type Style,
 	type PageSetup,
 	type WorksheetOptions
 } from './model.js';
-export { readWorkbook, type ReadLimits } from './read.js';
+export { readWorkbook, type ReadLimits, type ReadOptions } from './read.js';
 export { writeWorkbook } from './write.js';

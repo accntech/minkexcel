@@ -30,7 +30,8 @@ try {
 const worker = `import {readWorkbook,writeWorkbook} from '/xlsx.js';
 self.onmessage=async()=>{
  try {
- const foreign=await readWorkbook(new Uint8Array(await (await fetch('/fixture.xlsx')).arrayBuffer()));
+ const foreign=await readWorkbook(new Uint8Array(await (await fetch('/fixture.xlsx')).arrayBuffer()),{preserveTemplate:true});
+ foreign.getWorksheet(1).getCell('A3').value='000000999';
  const bytes=await writeWorkbook(foreign);
  const roundtrip=await readWorkbook(bytes);
  self.postMessage({tin:roundtrip.worksheets[0].getCell('A3').value,date:roundtrip.worksheets[0].getCell('F3').value.toISOString(),bytes},[bytes.buffer]);
@@ -95,14 +96,17 @@ try {
     true,
     { formula: "1+2", result: 3 },
   ]);
-  assert.equal(result.tin, "001234567");
+  assert.equal(result.tin, "000000999");
   assert.equal(result.date, "2026-10-08T12:30:00.000Z");
   assert.deepEqual(errors, []);
   const exported = new Uint8Array(result.bytes);
   assert.equal(new DataView(exported.buffer).getUint16(8, true), 8);
   assert.match(unzip(exported).get("xl/sharedStrings.xml")!, /001234567/);
+	const fixtureParts = unzip(new Uint8Array(await Bun.file(new URL('fixtures/exceljs-1900.xlsx', import.meta.url)).arrayBuffer()));
+	assert.equal(unzip(exported).get('xl/styles.xml'), fixtureParts.get('xl/styles.xml'), 'Worker template export retains foreign styles');
+	assert.equal(unzip(exported).get('xl/worksheets/_rels/sheet1.xml.rels'), fixtureParts.get('xl/worksheets/_rels/sheet1.xml.rels'), 'Worker template export retains hyperlink relationships');
   console.log(
-    "Browser module and Web Worker: compressed import, export, Blob roundtrip and scalar values passed.",
+    "Browser module and Web Worker: compressed import, export, Blob roundtrip, scalar values and template preservation passed.",
   );
 } finally {
   await browser?.close();
