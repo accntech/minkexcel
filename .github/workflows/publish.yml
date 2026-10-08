@@ -57,6 +57,17 @@ jobs:
       - name: Run tests
         run: bun run test
 
+      - name: Build and check ExcelJS interoperability
+        run: |
+          bun run build
+          bun run test:interop
+
+      - name: Install Chromium
+        run: bun tools/node_modules/@playwright/test/cli.js install --with-deps chromium
+
+      - name: Check browser and Web Worker
+        run: bun run test:browser
+
       - name: Check package contents
         run: npm pack --dry-run
 

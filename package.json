@@ -1,7 +1,8 @@
 {
   "name": "minkexcel",
   "version": "0.1.0",
-  "description": "Small, dependency-free XLSX import and export for accounting workflows.",
+  "license": "MIT",
+  "description": "Simple, dependency-free XLSX import and export. A lightweight alternative to ExcelJS.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,6 +33,9 @@
     "prepack": "npm run build",
     "test": "bun test",
     "bench": "bun benchmarks/exceljs.ts",
+    "bench:matrix": "bun benchmarks/matrix.ts",
+    "bench:node": "node benchmarks/matrix.ts",
+    "test:interop": "bun benchmarks/reliability.ts",
     "test:browser": "bun tests/browser.ts"
   }
 }

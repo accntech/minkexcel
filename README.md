@@ -2,161 +2,396 @@
 
 <img src="assets/icon.png" alt="MinkExcel white mink and XL icon on a solid Excel green squircle" width="160" height="160">
 
-Small XLSX import and export for accounting workflows. This
-standalone TypeScript package has **zero npm dependencies**, including development
-and peer dependencies. Its source uses standard JavaScript APIs and has no
-Node/Bun imports, filesystem access, network access, or application framework imports.
-It ships ES modules and TypeScript declarations for browser bundles, Web Workers,
-Bun, and modern Node runtimes with the standard compression APIs.
+A simple, fast replacement for common ExcelJS XLSX import/export
+workflows, with **zero runtime dependencies**. Export application data, create
+formatted reports and read spreadsheet values in browsers, Web Workers, Bun
+and Node.js. The package ships ES modules and TypeScript declarations.
 
-## Usage
+MinkExcel prioritizes fast processing and dependable file handling: bounded
+imports, CRC32 validation, strict XML checks and preservation of literal cell
+text. See the [ExcelJS comparison](#minkexcel-vs-exceljs) for measured speed and
+file-integrity results.
+
+Import is value-oriented: reading and rewriting an existing workbook does not
+preserve its styles, layout or unsupported features. Use it for data extraction
+and new reports when that scope fits your application.
+
+## Installation and compatibility
 
 ```sh
 npm install minkexcel
 ```
 
+The package is ESM-only; use `import`. Export requires
+`CompressionStream("deflate")` and Web Streams. Import uses the package's own
+inflater and does not require `DecompressionStream`. The library performs no
+filesystem or network I/O; your application supplies and saves the bytes.
+
+Verified on October 8, 2026:
+
+| Environment | Verified version | Coverage |
+| --- | --- | --- |
+| Bun | 1.4.0 | README examples, unit tests, interoperability and benchmarks |
+| Node.js | 24.12.0 | README examples and benchmarks using the built ES modules |
+| Chromium | 153.0.8010.12 | Browser bundle and module Web Worker import/export |
+
+These are verified versions, not minimum supported versions. Other browsers
+and runtime versions need validation in your application.
+
+The full browser ESM bundle measures **29.9 KiB minified** (30,598 bytes) and
+**11.0 KiB gzipped** (11,291 bytes), using Bun 1.4.0 on October 8, 2026. This
+covers all public exports and excludes declarations and the icon. See
+[contributor instructions](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
+to reproduce the measurement.
+
+## Quick start
+
+### Export a workbook
+
 ```ts
-import { Workbook, readWorkbook, writeWorkbook } from "minkexcel";
+import { Workbook, writeWorkbook } from "minkexcel";
 
 const book = new Workbook();
-const sheet = book.addWorksheet("Customers");
-sheet.addRow(["TIN", "Name", "Amount"]);
-sheet.addRow(["001234567", "Ana & Co", 1234.56]);
+const sheet = book.addWorksheet("Products");
+sheet.addRow(["SKU", "Name", "Price"]);
+sheet.addRow(["001234567", "Desk lamp", 1234.56]);
 sheet.getColumn(3).numFmt = "#,##0.00";
 
-const bytes = await writeWorkbook(book);
-const imported = await readWorkbook(bytes);
+const bytes = await writeWorkbook(book); // Uint8Array containing an XLSX file
 ```
 
-In the browser, obtain input with `new Uint8Array(await file.arrayBuffer())` and
-create an output `Blob` from the returned bytes with MIME type
-`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`.
-For larger workbooks, run the package in a Web Worker to move XML processing off
-the main thread. Read and write support an optional `AbortSignal`:
+Keep identifiers as strings to retain leading zeros. Number formats control
+Excel's display; they do not change the stored value.
+
+### Import and read values
+
+Using `bytes` from the export above:
 
 ```ts
-await readWorkbook(
-  bytes,
-  { rows: 10_000, columns: 100, cells: 100_000 },
-  signal,
-);
-await writeWorkbook(book, signal);
+import { readWorkbook } from "minkexcel";
+
+const imported = await readWorkbook(bytes);
+const products = imported.getWorksheet("Products");
+if (!products) throw new Error("Products worksheet is missing.");
+
+console.log(products.getCell("A2").value); // "001234567"
+console.log(products.getCell(2, 3).value); // 1234.56
+
+products.eachRow((row, rowNumber) => {
+  if (rowNumber === 1) return; // Skip this workbook's header.
+  console.log(row.getCell(1).value, row.getCell(3).value);
+});
 ```
 
-## Supported scope
+Use `imported.worksheets` to access all worksheets. `getWorksheet(name)` returns
+`undefined` when there is no exact name match. `eachRow` and `eachCell` visit
+populated entries in position order, skipping blank rows and cells.
 
-- Typed strings, numbers, booleans, dates, blanks, errors and cached formulas.
+### Browser files and downloads
+
+```ts
+import { readWorkbook, writeWorkbook, type Workbook } from "minkexcel";
+
+async function importFile(file: File): Promise<Workbook> {
+  return readWorkbook(new Uint8Array(await file.arrayBuffer()));
+}
+
+async function downloadWorkbook(book: Workbook): Promise<void> {
+  const bytes = await writeWorkbook(book);
+  const blob = new Blob([bytes.slice().buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "products.xlsx";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+```
+
+For larger workbooks, run import and export in a module Web Worker to move XML
+processing off the main thread. Workbook XML and ZIP bytes are built in memory;
+there is no streaming workbook writer.
+
+## API conventions
+
+Row and column numbers are **one-based**: `getCell(2, 3)` refers to `C2`.
+Cell addresses use uppercase letters, such as `"C2"`.
+
+Arrays supplied to `addRow` or assigned to `row.values` are **zero-based**,
+but reading `row.values` produces a **one-based sparse array**:
+
+```ts
+const row = sheet.addRow(["001234567", "Desk lamp", 1234.56]);
+console.log(row.values[0]); // undefined
+console.log(row.values[1]); // "001234567"
+console.log(row.values[3]); // 1234.56
+const values = row.values.slice(1); // ["001234567", "Desk lamp", 1234.56]
+```
+
+Blank cells create gaps in the returned array; `slice(1)` retains those gaps.
+Prefer `getCell(column).value` when you need a specific field. `getRow` and
+`getCell` create missing rows or cells; a newly created cell has value `null`.
+
+`sheet.rowCount`, `sheet.columnCount` and `row.cellCount` describe the furthest
+created positions, not the number of populated entries. Column definitions
+alone do not increase `sheet.columnCount`.
+
+`cell.value` returns a string, number, boolean, `Date`, `null`, formula object
+or error object. `cell.text` returns a plain string representation or a formula's
+cached result; it does not apply Excel number formatting.
+
+## Formatted report recipe
+
+This example combines a merged title, frozen headings, dates, numeric
+number formatting, a cached total, filters and print settings:
+
+```ts
+import { Workbook, writeWorkbook } from "minkexcel";
+
+const report = new Workbook();
+report.creator = "Product team";
+const inventory = report.addWorksheet("Inventory", {
+  views: [{ state: "frozen", ySplit: 2 }],
+  pageSetup: {
+    orientation: "landscape",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    printTitlesRow: "1:2",
+    printArea: "A1:D5",
+  },
+});
+
+inventory.addRow(["Product inventory"]);
+inventory.mergeCells("A1:D1");
+inventory.getCell("A1").font = { bold: true, size: 16 };
+inventory.addRow(["SKU", "Product", "Updated on", "Stock"]);
+inventory.getRow(2).font = { bold: true };
+inventory.getRow(2).height = 24;
+inventory.getCell("D2").fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFE2EFDA" },
+};
+inventory.addRow(["001234567", "Desk lamp", new Date(Date.UTC(2026, 9, 8)), 120]);
+inventory.addRow(["009876543", "Notebook", new Date(Date.UTC(2026, 9, 9)), 80]);
+inventory.addRow(["", "Total", null, { formula: "SUM(D3:D4)", result: 200 }]);
+inventory.columns = [{ width: 16 }, { width: 28 }, { width: 16 }, { width: 18 }];
+inventory.getColumn(3).numFmt = "yyyy-mm-dd";
+inventory.getColumn(4).numFmt = "#,##0";
+inventory.getColumn(4).alignment = { horizontal: "right" };
+inventory.autoFilter = { from: "A2", to: "D4" };
+inventory.headerFooter.oddFooter = "Page &P of &N";
+
+const reportBytes = await writeWorkbook(report);
+```
+
+Dates are serialized from the JavaScript `Date` timestamp using UTC and the
+1900 Excel date system. Import recognizes both 1900 and 1904 date systems.
+Excel serial dates carry no timezone; use `Date.UTC` for date-only values when
+you want the same calendar date regardless of the host timezone. On import,
+number formats determine which non-formula numeric cells become `Date` values.
+
+Formula objects contain formula text without a leading `=` and an optional
+cached `result`. MinkExcel does not calculate formulas or update cached results
+after inputs change. Supply the result for readers that do not recalculate;
+exports request full recalculation when opened in Excel by default. Imported
+formula results that represent dates remain numeric serials.
+
+## Supported scope and limitations
+
+- Values: strings, numbers, booleans, dates, blanks, errors and cached formulas.
   Strings retain leading zeros, Unicode, whitespace and Excel escape sequences.
-- Workbook metadata, multiple sheets, row gaps, widths, heights, fonts, solid
-  fills, alignment, number formats, merged cells, frozen rows, filters, print
-  titles/areas, page setup/margins and footers on export.
-- Shared/inline strings, rich text flattened to text, hyperlink display text,
-  cached formulas and 1900/1904 dates on import. Import reads values and uses
-  number formats to identify dates; it does not preserve presentation for editing.
-- Owned ZIP32 reader for STORE and DEFLATE, CRC32 checks, internal relationship
-  resolution, XML parsing without DTDs/entities from external sources, size and
+- Export: workbook metadata, multiple sheets, row gaps, widths, heights, fonts,
+  solid fills, alignment, number formats, merged cells, frozen rows, filters,
+  print titles/areas, page setup/margins and footers.
+- Import: shared/inline strings, rich text flattened to text, hyperlink display
+  text, cached formulas and 1900/1904 dates. Presentation is not preserved.
+- Archive handling: ZIP32 STORE and DEFLATE, CRC32 checks, internal relationship
+  resolution, XML parsing without external DTD/entity resolution, size and
   nesting limits, and cancellation checkpoints during archive/row processing.
+  External relationships are never fetched.
 
-This is a focused implementation of common accounting workbook requirements.
-It does not evaluate formulas, edit arbitrary workbooks without losing features,
-read legacy `.xls`, support ZIP64/encryption, or implement charts, images, macros,
-conditional formatting or the complete ExcelJS API.
+MinkExcel does not read legacy `.xls`, support ZIP64/encryption, implement charts,
+images, macros, tables, data validation or conditional formatting, or provide the
+complete ExcelJS API. Reading and rewriting arbitrary workbooks loses features
+outside the import scope.
 
-Exports use ZIP DEFLATE compression through the standard `CompressionStream`
-API. The package removes its zlib envelope to write the raw DEFLATE payload
-required by ZIP; checksums and ZIP headers remain owned by the package. Export
-requires a runtime that provides `CompressionStream('deflate')` and Web Streams.
-See the [Compression Standard](https://compression.spec.whatwg.org/#supported-formats).
-Import accepts both stored and compressed workbooks. The package builds workbook
-XML and ZIP bytes in memory; it is not a streaming workbook writer.
+Export uses the standard `CompressionStream("deflate")` API and removes its
+zlib envelope to obtain raw ZIP DEFLATE. ZIP headers and checksums are owned by
+the package. Import accepts stored and compressed workbooks.
 
-Default import limits: 5 MiB input, 1,000 archive entries, 20 MiB per entry,
-50 MiB total uncompressed data, compression ratio 200, 10,000 data rows plus the
-header, 100 columns and a 100,000-cell rectangular extent per worksheet.
-Callers can supply explicit limits. Inflate output is also bounded by the
-entry's declared size and validated against its CRC32. External relationships
-are never fetched.
+### Import limits and errors
 
-## Tests and benchmark
+`readWorkbook(bytes, limits?, signal?)` accepts a partial `ReadLimits` object.
+Fields you omit retain their defaults; byte limits use bytes, not decimal MB.
+Explicit limits must be finite nonnegative safe integers, except
+`compressionRatio`, which must be finite and greater than zero. An explicit
+`undefined` retains the field's default.
 
-Run from this project:
+| Option | Default | Scope |
+| --- | ---: | --- |
+| `fileBytes` | 5 MiB (5,242,880 bytes) | Input file |
+| `entries` | 1,000 | Archive entries |
+| `entryBytes` | 20 MiB (20,971,520 bytes) | Uncompressed data per archive entry |
+| `totalBytes` | 50 MiB (52,428,800 bytes) | Total uncompressed archive data |
+| `compressionRatio` | 200 | Uncompressed/compressed size per entry |
+| `rows` | 10,000 | Maximum worksheet row number minus one |
+| `columns` | 100 | Maximum worksheet column number |
+| `cells` | 100,000 | Rectangular extent per worksheet |
 
-```sh
-bun run test
+The row limit allows positions through row 10,001 to accommodate a header.
+The reader does not identify a header automatically. Gaps count toward limits:
+the cell extent uses the highest parsed row number multiplied by the highest
+column number encountered, with at least one column for blank rows.
+
+Limits apply together. A worksheet with a header and 1,000 data rows across
+100 columns has an extent of 100,100 cells, exceeding the default cell limit.
+Increase `cells` explicitly when that layout is expected:
+
+```ts
+import { readWorkbook, XlsxError, XlsxLimitError } from "minkexcel";
+
+try {
+  const imported = await readWorkbook(bytes, {
+    rows: 1_000,
+    columns: 100,
+    cells: 100_100,
+  });
+  console.log(imported.worksheets.length);
+} catch (error) {
+  if (error instanceof XlsxLimitError) {
+    console.error("Workbook exceeds an import limit:", error.message);
+  } else if (error instanceof XlsxError) {
+    console.error("Workbook is invalid or unsupported:", error.message);
+  } else {
+    throw error;
+  }
+}
 ```
 
-The package build, browser tests and the ExcelJS benchmark use development tools isolated
-in `tools/package.json`, which has its own lockfile. The library manifest still
-has no dependencies, devDependencies or peerDependencies. To run these tools:
+Inflate output is bounded by the entry's declared size and validated against
+its CRC32. Import limits do not apply to export.
 
-```sh
-bun install --cwd tools --ignore-scripts
-bun run test:browser
-bun run bench
+### Cancellation
+
+Both operations accept an optional `AbortSignal`:
+
+```ts
+const controller = new AbortController();
+const signal = controller.signal;
+
+await readWorkbook(bytes, {}, signal);
+await writeWorkbook(book, signal);
+
+// Call controller.abort() from your application's cancel action.
 ```
 
-Install Chromium with `bun tools/node_modules/@playwright/test/cli.js install chromium`
-if it is not already available.
+An aborted operation rejects with `signal.reason`. Cancellation is checked at
+processing checkpoints; use a Web Worker when main-thread responsiveness matters.
 
-The unit tests and synthetic workbook fixtures live in `tests/`. They use
-Bun's built-in test runner and Node's built-in compressor and inflater as independent
-DEFLATE references; no external test packages are needed for the unit tests.
-The browser harness in `tests/browser.ts` uses the optional Playwright tool
-to test a browser bundle and a Web Worker.
+## MinkExcel vs ExcelJS
 
-The optional benchmark in `benchmarks/exceljs.ts` uses ExcelJS from the tools
-project, not a library dependency. It compares equivalent
-synthetic ledgers at 100, 1,000 and 10,000 rows, checks exported values outside
-timed samples, and feeds the same compressed input to both readers. See
-[measured results](benchmarks/RESULTS.md) and `benchmarks/results.json` for timing,
-output size, runtime, hardware, sample count and scope differences.
+Choose MinkExcel for simple XLSX imports and exports, a compact API and strict
+file-integrity checks. Migrating common ExcelJS workflows mainly involves
+changing the I/O calls below and checking the supported features. Choose ExcelJS
+when you need its broader workbook model, richer formatting or Node streaming I/O.
 
-ZIP layout follows the [PKWARE APPNOTE](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT);
-DEFLATE follows [RFC 1951](https://www.rfc-editor.org/rfc/rfc1951).
+| ExcelJS | MinkExcel |
+| --- | --- |
+| `new ExcelJS.Workbook()` | `new Workbook()` |
+| `await book.xlsx.writeBuffer()` | `await writeWorkbook(book)` |
+| `await book.xlsx.load(bytes)` | `const book = await readWorkbook(bytes)` |
+| `book.addWorksheet(name)`, `sheet.addRow(values)`, `sheet.getCell(address)` | Same method names for the supported subset |
 
-## Publishing releases
+`readWorkbook` creates a new workbook. It imports values rather than restoring
+presentation, and MinkExcel does not implement every ExcelJS method or feature.
 
-`.github/workflows/publish.yml` publishes to npm when a GitHub release is
-published. It checks out the release tag, verifies that the tag matches the
-version in `package.json`, runs the unit tests, and builds JavaScript and
-TypeScript declarations before publishing. The npm package includes `dist/`,
-the README, the manifest and the icon. The library remains dependency-free;
-TypeScript is installed only in the separate `tools/` project.
+This comparison uses MinkExcel 0.1.0 and ExcelJS 4.4.0, the version used by the
+benchmark. ExcelJS features are documented in its
+[versioned README](https://github.com/exceljs/exceljs/blob/v4.4.0/README.md)
+and dependencies in its
+[manifest](https://github.com/exceljs/exceljs/blob/v4.4.0/package.json).
 
-### One-time npm setup
+| Capability | MinkExcel | ExcelJS 4.4.0 |
+| --- | --- | --- |
+| Runtime npm dependencies | None | Nine direct dependencies, plus transitive dependencies |
+| File formats | XLSX | XLSX and CSV |
+| Imported presentation | Reads values; does not retain styles or layout | Reads supported styles and workbook features for editing; not lossless for arbitrary files |
+| Export formatting | Fonts, solid fills, alignment, number formats, merges and print settings | Broader styling, including borders and gradient fills |
+| Rich text and hyperlinks | Imports display text only | Rich text and hyperlink cell values |
+| Images, tables, data validation and conditional formatting | Unsupported | Supported, with feature-specific limitations |
+| Formulas | Formula text and cached results; no calculation engine | Formula text and supplied results; no calculation engine |
+| Workbook processing | In memory; optional `AbortSignal` and configurable import limits | In-memory document model and Node streaming reader/writer |
+| Browser use | ES modules; export requires `CompressionStream('deflate')` and Web Streams | Browser bundles for the document model; streaming reader/writer excluded |
 
-The package must exist on npm before configuring
-[trusted publishing](https://docs.npmjs.com/trusted-publishers/). Publish the
-initial version from a local checkout with an npm account that owns the package:
+### Measured performance
 
-```sh
-bun install --cwd tools --frozen-lockfile --ignore-scripts
-bun run test
-npm login
-npm publish
-```
+MinkExcel was faster for both operations at every tested size (100, 1,000 and
+10,000 data rows) across numeric, text and mixed workloads on Bun and Node.js.
+At 10,000 rows, exports were about **1.9–2.8× faster** and imports **1.2–1.5×
+faster** than ExcelJS 4.4.0 in this run:
 
-`npm publish` builds the package through the `prepack` script. Then open the
-package's settings on npmjs.com and add a GitHub Actions trusted publisher:
+| Runtime | Workload, 10,000 rows | MinkExcel export ms | ExcelJS export ms | MinkExcel import ms | ExcelJS import ms |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Bun 1.4.0 | Numeric | 56.8 | 114.5 | 68.5 | 96.3 |
+| Bun 1.4.0 | Text | 70.1 | 130.9 | 85.5 | 121.7 |
+| Bun 1.4.0 | Mixed | 69.9 | 133.7 | 79.9 | 118.1 |
+| Node 24.12.0 | Numeric | 60.7 | 167.7 | 64.1 | 85.5 |
+| Node 24.12.0 | Text | 66.6 | 186.1 | 80.9 | 94.2 |
+| Node 24.12.0 | Mixed | 69.3 | 192.2 | 75.5 | 93.4 |
 
-- Organization or user: `accntech`
-- Repository: `minkexcel`
-- Workflow filename: `publish.yml`
-- Environment name: leave blank
-- Allowed actions: enable direct publishing with `npm publish`
+Measured October 8, 2026 on an Apple M4 Pro. Each worksheet has eight columns
+plus a header. Times are medians of eleven samples after one warmup, using the
+built ES modules without an AbortSignal. Export includes workbook construction
+and serialization with the same supported styles. Both readers receive the
+same compressed ExcelJS output. Every data cell is checked with both readers
+outside timings, including a MinkExcel roundtrip.
 
-The workflow authenticates with OIDC, so no npm token or GitHub secret is needed.
-Complete the first workflow publish within two days of adding the trusted
-publisher; npm expires new configurations that have not yet published.
+MinkExcel imports values while ExcelJS builds a richer presentation model.
+Both writers use DEFLATE, with different compression settings and workbook XML.
+These document-model measurements do not compare streaming, browser speed or
+peak memory, and are not universal performance guarantees. Full results,
+raw samples and file sizes: [Bun](benchmarks/MATRIX.md)
+([JSON](benchmarks/matrix.json)), [Node](benchmarks/MATRIX-NODE.md)
+([JSON](benchmarks/matrix-node.json)). See
+[CONTRIBUTING.md](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
+to reproduce them.
 
-### Subsequent releases
+### File integrity and text preservation
 
-Update `package.json` to a new, unpublished version and commit it with the
-release changes. Publish a GitHub release for that commit using a matching tag,
-such as `v0.1.1` for version `0.1.1` (tags without the `v` prefix also work).
-The tag must include this workflow and the packaging configuration.
+The following checks use the same input values or file bytes with both
+libraries. String preservation checks each writer's output with both readers;
+file checks use the default public import options.
 
-Stable releases publish to npm's `latest` tag. GitHub prereleases and versions
-such as `0.2.0-beta.1` publish to `next`. Draft releases and branch pushes do
-not publish. For a local package preview, run `npm pack --dry-run` after
-installing the tools.
+| Check | MinkExcel | ExcelJS 4.4.0 |
+| --- | --- | --- |
+| Preserve literal `_x0041_` and `_x005F_` strings | Preserved | Changed |
+| Preserve a carriage return within cell text | Preserved | Changed |
+| Preserve Unicode, XML characters and surrounding spaces | Preserved | Preserved |
+| Read a worksheet with a mismatched declared CRC32 | Rejected | Accepted |
+| Read a truncated ZIP archive | Rejected | Rejected |
+| Read XML that rebinds the reserved `xml` prefix | Rejected | Accepted |
+| Read a worksheet containing a DTD | Rejected | Accepted |
+
+MinkExcel's reader validates CRC32, enforces XML namespace rules and rejects
+DTDs. Configurable import bounds also reject invalid limit values instead of
+silently disabling checks. These results cover specific cases; ExcelJS has
+broader workbook support, and reliability still depends on the features and
+files your application uses. See the [reproducible checks](benchmarks/RELIABILITY.md)
+and [recorded values](benchmarks/reliability.json).
+
+## Development and releases
+
+See [CONTRIBUTING.md](https://github.com/accntech/minkexcel/blob/main/CONTRIBUTING.md)
+for build, test, browser harness and benchmark commands, and
+[RELEASING.md](https://github.com/accntech/minkexcel/blob/main/RELEASING.md)
+for npm publishing and GitHub release setup.
+
+## License
+
+Released under the [MIT License](LICENSE).
