@@ -4,6 +4,7 @@
 
 [![npm version](https://img.shields.io/npm/v/minkexcel?style=plastic&color=orange)](https://www.npmjs.com/package/minkexcel)
 [![npm monthly downloads](https://img.shields.io/npm/dm/minkexcel?style=plastic&label=downloads&color=brightgreen)](https://www.npmjs.com/package/minkexcel)
+[![Documentation](https://img.shields.io/badge/docs-MinkExcel-217346?style=plastic)](https://accntech.github.io/minkexcel/)
 [![GitHub stars](https://img.shields.io/github/stars/accntech/minkexcel?style=social&label=Stars)](https://github.com/accntech/minkexcel/stargazers)
 
 A simple, fast replacement for common ExcelJS XLSX import/export
