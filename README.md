@@ -22,6 +22,8 @@ and new reports when that scope fits your application.
 
 ## Documentation site
 
+Read the [MinkExcel documentation](https://accntech.github.io/minkexcel/).
+
 The static documentation site includes guides, the public API, an ExcelJS
 comparison and interactive graphs of the recorded benchmarks. To build and
 preview it locally:
